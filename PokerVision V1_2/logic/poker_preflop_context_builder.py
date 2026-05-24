@@ -143,8 +143,11 @@ def _build_from_action_model(model: Dict[str, Any], hero_pos: str) -> Dict[str, 
     limpers = int(model.get("limpers") or 0)
     callers = int(model.get("callers") or 0)
     actions = list(model.get("actions") or [])
+    explicit_node_type = model.get("node_type")
 
-    if four_bettor_pos and three_bettor_pos and opener_pos:
+    if isinstance(explicit_node_type, str) and explicit_node_type.strip():
+        node_type = explicit_node_type.strip()
+    elif four_bettor_pos and three_bettor_pos and opener_pos:
         node_type = "threebettor_vs_4bet" if hero_pos == three_bettor_pos else "cold_4bet"
     elif three_bettor_pos and opener_pos:
         node_type = "opener_vs_3bet" if hero_pos == opener_pos else "facing_open"

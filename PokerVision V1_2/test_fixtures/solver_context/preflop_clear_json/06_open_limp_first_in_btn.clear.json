@@ -1,0 +1,76 @@
+{
+  "frame_id": "fixture_06_open_limp_first_in_btn",
+  "board": {
+    "cards": [],
+    "street": "preflop"
+  },
+  "Total_pot": 1.5,
+  "preflop_action_model": {
+    "schema_version": "preflop_action_model_v1",
+    "actions": [
+      {
+        "pos": "BTN",
+        "action": "hero_to_act",
+        "amount_bb": 0.0
+      }
+    ],
+    "opener_pos": null,
+    "three_bettor_pos": null,
+    "four_bettor_pos": null,
+    "limpers": 0,
+    "callers": 0,
+    "node_type": "open_limp_first_in"
+  },
+  "players": {
+    "UTG": {
+      "stack": 100.0,
+      "fold": true,
+      "chips": false
+    },
+    "MP": {
+      "stack": 100.0,
+      "fold": true,
+      "chips": false
+    },
+    "CO": {
+      "stack": 100.0,
+      "fold": true,
+      "chips": false
+    },
+    "BTN": {
+      "hero": true,
+      "cards": [
+        "A_hearts",
+        "9_hearts"
+      ],
+      "stack": 100.0,
+      "fold": false,
+      "chips": false
+    },
+    "SB": {
+      "stack": 99.5,
+      "fold": false,
+      "chips": 0.5
+    },
+    "BB": {
+      "stack": 99.0,
+      "fold": false,
+      "chips": 1.0
+    }
+  },
+  "expected_engine_context": {
+    "street": "preflop",
+    "hero_hand": [
+      "Ah",
+      "9h"
+    ],
+    "hero_pos": "BTN",
+    "player_count": 6,
+    "node_type": "open_limp_first_in",
+    "opener_pos": null,
+    "three_bettor_pos": null,
+    "four_bettor_pos": null,
+    "limpers": 0,
+    "callers": 0
+  }
+}
