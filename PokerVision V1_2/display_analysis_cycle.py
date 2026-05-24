@@ -128,6 +128,8 @@ from logic.live_hand_continuity import (
     normalize_card_list,
 )
 from logic.clear_json_state_machine import ClearJsonStateMachine
+from logic.poker_clear_solver_preview_adapter import build_clear_safe_solver_preview_blocks
+from logic.poker_preflop_solver_preview_builder import build_preflop_solver_preview
 from logic.table_action_transaction_gate import TableActionTransactionGate
 from pipeline.card_detection_pipeline import run_card_detection_pipeline
 from pipeline.digit_amounts_pipeline import run_digit_amounts_pipeline
@@ -1452,6 +1454,34 @@ def build_and_save_action_decision_contract(
         }
 
 
+
+def _attach_preflop_solver_preview_to_clear_state(clear_state: Dict[str, Any]) -> Dict[str, Any]:
+    """Attach Clear_JSON-safe preflop solver preview blocks when available.
+
+    Safe integration rule:
+    - Never raises.
+    - Does nothing for non-preflop or unsupported states.
+    - Does not affect Action_Decision_JSON, runtime plan, or click execution.
+    """
+    if not isinstance(clear_state, dict):
+        return clear_state
+
+    board = clear_state.get("board")
+    if not isinstance(board, dict) or board.get("street") != "preflop":
+        return clear_state
+
+    try:
+        solver_preview = build_preflop_solver_preview(clear_state)
+        solver_blocks = build_clear_safe_solver_preview_blocks(solver_preview)
+        if isinstance(solver_blocks, dict):
+            clear_state.update(solver_blocks)
+    except Exception:
+        # Keep final Clear_JSON publication independent from solver preview failures.
+        return clear_state
+
+    return clear_state
+
+
 def save_dark_and_clear_table_frame_json(
     *,
     state: Dict[str, object],
@@ -1748,6 +1778,7 @@ def save_dark_and_clear_table_frame_json(
                             final_clear_state = dict(clear_state_to_save)
                             if click_result is not None:
                                 final_clear_state["click_result"] = dict(click_result)
+                            final_clear_state = _attach_preflop_solver_preview_to_clear_state(final_clear_state)
                             validation = validate_clear_json_contract(final_clear_state)
                             if validation.get("ok"):
                                 clear_path = save_clear_table_frame_json(
@@ -1841,6 +1872,7 @@ def save_dark_and_clear_table_frame_json(
                         final_clear_state = dict(clear_state_candidate)
                         if click_result is not None:
                             final_clear_state["click_result"] = dict(click_result)
+                        final_clear_state = _attach_preflop_solver_preview_to_clear_state(final_clear_state)
                         validation = validate_clear_json_contract(final_clear_state)
                         if validation.get("ok"):
                             clear_path = save_clear_table_frame_json(

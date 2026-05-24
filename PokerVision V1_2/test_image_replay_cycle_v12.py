@@ -477,7 +477,11 @@ def _validate_state(item: ReplayImageItem, state: Dict[str, Any]) -> Tuple[List[
 
 
 CLEAR_REQUIRED_TOP_LEVEL_KEYS = {"frame_id", "board", "Total_pot", "players"}
-CLEAR_ALLOWED_TOP_LEVEL_KEYS = CLEAR_REQUIRED_TOP_LEVEL_KEYS | {"click_result"}
+CLEAR_ALLOWED_TOP_LEVEL_KEYS = CLEAR_REQUIRED_TOP_LEVEL_KEYS | {
+    "click_result",
+    "engine_context",
+    "engine_decision_preview",
+}
 CLEAR_FORBIDDEN_ANYWHERE_KEYS = {
     "frame_name",
     "table_id",
