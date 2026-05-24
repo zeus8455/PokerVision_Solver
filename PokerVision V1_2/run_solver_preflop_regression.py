@@ -30,6 +30,7 @@ CHECKS = [
     ("clear_solver_preview_adapter_unit", ["test_poker_clear_solver_preview_adapter_unit.py"]),
     ("clear_json_solver_blocks_audit", ["audit_clear_json_solver_blocks.py", "--root", r"C:\PokerVision_Solver\Script_Test_PokerVision_All_files\Test_Replay_Output\ui_display_cycle\current_cycle\Clear_JSON"]),
     ("solver_vs_runtime_actions_audit", ["audit_solver_vs_runtime_actions.py", "--root", "C:/PokerVision_Solver/Script_Test_PokerVision_All_files/Test_Replay_Output/ui_display_cycle/current_cycle"]),
+    ("solver_action_decision_candidate_unit", ["test_solver_action_decision_candidate_unit.py"]),
     ("real_clear_json_preview_audit", ["audit_real_clear_json_preflop_solver_preview.py"]),
 ]
 
