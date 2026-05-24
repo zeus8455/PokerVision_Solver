@@ -1,0 +1,86 @@
+{
+  "frame_id": "fixture_12_limper_vs_iso_mp",
+  "board": {
+    "cards": [],
+    "street": "preflop"
+  },
+  "Total_pot": 10.5,
+  "preflop_action_model": {
+    "schema_version": "preflop_action_model_v1",
+    "actions": [
+      {
+        "pos": "MP",
+        "action": "limp",
+        "amount_bb": 1.0
+      },
+      {
+        "pos": "BTN",
+        "action": "iso_raise",
+        "amount_bb": 5.0
+      },
+      {
+        "pos": "MP",
+        "action": "hero_to_act",
+        "amount_bb": 1.0
+      }
+    ],
+    "opener_pos": "BTN",
+    "three_bettor_pos": null,
+    "four_bettor_pos": null,
+    "limpers": 1,
+    "callers": 0,
+    "node_type": "limper_vs_iso"
+  },
+  "players": {
+    "UTG": {
+      "stack": 100.0,
+      "fold": true,
+      "chips": false
+    },
+    "MP": {
+      "hero": true,
+      "cards": [
+        "9_spades",
+        "9_diamonds"
+      ],
+      "stack": 99.0,
+      "fold": false,
+      "chips": 1.0
+    },
+    "CO": {
+      "stack": 100.0,
+      "fold": true,
+      "chips": false
+    },
+    "BTN": {
+      "stack": 95.0,
+      "fold": false,
+      "chips": 5.0
+    },
+    "SB": {
+      "stack": 99.5,
+      "fold": true,
+      "chips": 0.5
+    },
+    "BB": {
+      "stack": 99.0,
+      "fold": true,
+      "chips": 1.0
+    }
+  },
+  "expected_engine_context": {
+    "street": "preflop",
+    "hero_hand": [
+      "9s",
+      "9d"
+    ],
+    "hero_pos": "MP",
+    "player_count": 6,
+    "node_type": "limper_vs_iso",
+    "opener_pos": "BTN",
+    "three_bettor_pos": null,
+    "four_bettor_pos": null,
+    "limpers": 1,
+    "callers": 0
+  }
+}

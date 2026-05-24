@@ -1,0 +1,91 @@
+{
+  "frame_id": "fixture_15_threebettor_vs_4bet_btn",
+  "board": {
+    "cards": [],
+    "street": "preflop"
+  },
+  "Total_pot": 25.0,
+  "preflop_action_model": {
+    "schema_version": "preflop_action_model_v1",
+    "actions": [
+      {
+        "pos": "CO",
+        "action": "open_raise",
+        "amount_bb": 2.5
+      },
+      {
+        "pos": "BTN",
+        "action": "three_bet",
+        "amount_bb": 8.0
+      },
+      {
+        "pos": "CO",
+        "action": "four_bet",
+        "amount_bb": 22.0
+      },
+      {
+        "pos": "BTN",
+        "action": "hero_to_act",
+        "amount_bb": 8.0
+      }
+    ],
+    "opener_pos": "CO",
+    "three_bettor_pos": "BTN",
+    "four_bettor_pos": "CO",
+    "limpers": 0,
+    "callers": 0,
+    "node_type": "threebettor_vs_4bet"
+  },
+  "players": {
+    "UTG": {
+      "stack": 100.0,
+      "fold": true,
+      "chips": false
+    },
+    "MP": {
+      "stack": 100.0,
+      "fold": true,
+      "chips": false
+    },
+    "CO": {
+      "stack": 78.0,
+      "fold": false,
+      "chips": 22.0
+    },
+    "BTN": {
+      "hero": true,
+      "cards": [
+        "A_spades",
+        "Q_spades"
+      ],
+      "stack": 92.0,
+      "fold": false,
+      "chips": 8.0
+    },
+    "SB": {
+      "stack": 99.5,
+      "fold": true,
+      "chips": 0.5
+    },
+    "BB": {
+      "stack": 99.0,
+      "fold": true,
+      "chips": 1.0
+    }
+  },
+  "expected_engine_context": {
+    "street": "preflop",
+    "hero_hand": [
+      "As",
+      "Qs"
+    ],
+    "hero_pos": "BTN",
+    "player_count": 6,
+    "node_type": "threebettor_vs_4bet",
+    "opener_pos": "CO",
+    "three_bettor_pos": "BTN",
+    "four_bettor_pos": "CO",
+    "limpers": 0,
+    "callers": 0
+  }
+}
