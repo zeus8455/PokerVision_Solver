@@ -73,6 +73,8 @@ from config import (
     V06_ACTION_DECISION_DIR_NAME,
     V141_SOLVER_ACTION_DECISION_CANDIDATE_ENABLED,
     V141_SOLVER_ACTION_DECISION_CANDIDATE_DIR_NAME,
+    V15_SOLVER_ACTION_RUNTIME_PLAN_CANDIDATE_ENABLED,
+    V15_SOLVER_ACTION_RUNTIME_PLAN_CANDIDATE_DIR_NAME,
     V07_ACTION_RUNTIME_PLAN_ENABLED,
     V07_ACTION_RUNTIME_PLAN_DIR_NAME,
     V10_JSON_COMPLETE_DIR_NAME,
@@ -135,6 +137,10 @@ from logic.poker_preflop_solver_preview_builder import build_preflop_solver_prev
 from logic.solver_action_decision_candidate import (
     build_solver_action_decision_candidate_from_clear_json,
     validate_solver_action_decision_candidate,
+)
+from logic.solver_runtime_plan_candidate import (
+    build_solver_action_runtime_plan_candidate,
+    validate_solver_action_runtime_plan_candidate,
 )
 from logic.table_action_transaction_gate import TableActionTransactionGate
 from pipeline.card_detection_pipeline import run_card_detection_pipeline
@@ -750,6 +756,30 @@ def save_solver_action_decision_candidate_table_frame_json(
         / f"{frame_id}.solver_candidate.json"
     )
     _write_json_atomic(path, candidate_state)
+    return path
+
+
+
+def save_solver_action_runtime_plan_candidate_table_frame_json(
+    *,
+    candidate_plan_state: Dict[str, object],
+    cycle_dir: Path,
+    table_id: str,
+) -> Path:
+    """Save Solver_Action_Runtime_Plan_Candidate_JSON without affecting runtime."""
+    frame_id = str(
+        candidate_plan_state.get("source_solver_candidate_frame_id")
+        or candidate_plan_state.get("source_action_decision_frame_id")
+        or "unknown_frame"
+    )
+    safe_table_id = str(table_id or "table_unknown")
+    path = (
+        cycle_dir
+        / V15_SOLVER_ACTION_RUNTIME_PLAN_CANDIDATE_DIR_NAME
+        / safe_table_id
+        / f"{frame_id}.solver_runtime_plan_candidate.json"
+    )
+    _write_json_atomic(path, candidate_plan_state)
     return path
 
 
@@ -1523,6 +1553,7 @@ def build_and_save_solver_action_decision_candidate_contract(
                 "size_policy": candidate_state.get("size_policy"),
                 "target_button_classes": candidate_state.get("target_button_classes"),
                 "solver_stub": candidate_state.get("solver_stub"),
+                "candidate_state": candidate_state,
             }
 
         return {
@@ -1540,6 +1571,68 @@ def build_and_save_solver_action_decision_candidate_contract(
             "source": "Clear_JSON.engine_decision_preview",
             "path": None,
             "dir": V141_SOLVER_ACTION_DECISION_CANDIDATE_DIR_NAME,
+            "validation": {"ok": False, "errors": [str(exc)], "warnings": []},
+            "status": "error",
+        }
+
+
+
+def build_and_save_solver_action_runtime_plan_candidate_contract(
+    *,
+    solver_candidate_state: Dict[str, Any],
+    cycle_dir: Path,
+    table_id: str,
+) -> Dict[str, object]:
+    """Build/save Solver_Action_Runtime_Plan_Candidate_JSON without affecting runtime."""
+    if not V15_SOLVER_ACTION_RUNTIME_PLAN_CANDIDATE_ENABLED:
+        return {
+            "enabled": False,
+            "source": "Solver_Action_Decision_Candidate_JSON",
+            "path": None,
+            "dir": V15_SOLVER_ACTION_RUNTIME_PLAN_CANDIDATE_DIR_NAME,
+            "status": "disabled",
+        }
+
+    try:
+        candidate_plan_state = build_solver_action_runtime_plan_candidate(solver_candidate_state)
+        validation = validate_solver_action_runtime_plan_candidate(candidate_plan_state)
+
+        if validation.get("ok"):
+            path = save_solver_action_runtime_plan_candidate_table_frame_json(
+                candidate_plan_state=candidate_plan_state,
+                cycle_dir=cycle_dir,
+                table_id=table_id,
+            )
+            return {
+                "enabled": True,
+                "source": "Solver_Action_Decision_Candidate_JSON",
+                "path": str(path),
+                "dir": V15_SOLVER_ACTION_RUNTIME_PLAN_CANDIDATE_DIR_NAME,
+                "validation": validation,
+                "status": "saved",
+                "planned_action": candidate_plan_state.get("planned_action"),
+                "target_sequence": candidate_plan_state.get("target_sequence"),
+                "target_sequences": candidate_plan_state.get("target_sequences"),
+                "runtime_status": candidate_plan_state.get("status"),
+                "blocked_reason": candidate_plan_state.get("blocked_reason"),
+                "solver_stub": candidate_plan_state.get("solver_stub"),
+            }
+
+        return {
+            "enabled": True,
+            "source": "Solver_Action_Decision_Candidate_JSON",
+            "path": None,
+            "dir": V15_SOLVER_ACTION_RUNTIME_PLAN_CANDIDATE_DIR_NAME,
+            "validation": validation,
+            "status": "validation_failed",
+        }
+
+    except Exception as exc:
+        return {
+            "enabled": True,
+            "source": "Solver_Action_Decision_Candidate_JSON",
+            "path": None,
+            "dir": V15_SOLVER_ACTION_RUNTIME_PLAN_CANDIDATE_DIR_NAME,
             "validation": {"ok": False, "errors": [str(exc)], "warnings": []},
             "status": "error",
         }
@@ -1908,6 +2001,15 @@ def save_dark_and_clear_table_frame_json(
                                                 for message in final_solver_candidate_contract.get("validation", {}).get("errors", []) if isinstance(final_solver_candidate_contract.get("validation"), dict) else []:
                                                     add_error(state, block="solver_action_decision_candidate_contract", message=str(message))
                                             state["clear_json_contract"]["solver_action_decision_candidate_contract"] = final_solver_candidate_contract
+                                            final_solver_runtime_plan_candidate_contract = build_and_save_solver_action_runtime_plan_candidate_contract(
+                                                solver_candidate_state=final_solver_candidate_contract.get("candidate_state", {}),
+                                                cycle_dir=cycle_dir,
+                                                table_id=table_id,
+                                            )
+                                            if final_solver_runtime_plan_candidate_contract.get("status") not in {"saved", "disabled"}:
+                                                for message in final_solver_runtime_plan_candidate_contract.get("validation", {}).get("errors", []) if isinstance(final_solver_runtime_plan_candidate_contract.get("validation"), dict) else []:
+                                                    add_error(state, block="solver_action_runtime_plan_candidate_contract", message=str(message))
+                                            state["clear_json_contract"]["solver_action_runtime_plan_candidate_contract"] = final_solver_runtime_plan_candidate_contract
                                             state["clear_json_contract"]["decision_json_contract"] = {
                                                 "enabled": True,
                                                 "source": "Clear_JSON",
@@ -2014,6 +2116,15 @@ def save_dark_and_clear_table_frame_json(
                                             for message in final_solver_candidate_contract.get("validation", {}).get("errors", []) if isinstance(final_solver_candidate_contract.get("validation"), dict) else []:
                                                 add_error(state, block="solver_action_decision_candidate_contract", message=str(message))
                                         state["clear_json_contract"]["solver_action_decision_candidate_contract"] = final_solver_candidate_contract
+                                        final_solver_runtime_plan_candidate_contract = build_and_save_solver_action_runtime_plan_candidate_contract(
+                                            solver_candidate_state=final_solver_candidate_contract.get("candidate_state", {}),
+                                            cycle_dir=cycle_dir,
+                                            table_id=table_id,
+                                        )
+                                        if final_solver_runtime_plan_candidate_contract.get("status") not in {"saved", "disabled"}:
+                                            for message in final_solver_runtime_plan_candidate_contract.get("validation", {}).get("errors", []) if isinstance(final_solver_runtime_plan_candidate_contract.get("validation"), dict) else []:
+                                                add_error(state, block="solver_action_runtime_plan_candidate_contract", message=str(message))
+                                        state["clear_json_contract"]["solver_action_runtime_plan_candidate_contract"] = final_solver_runtime_plan_candidate_contract
                                         state["clear_json_contract"]["decision_json_contract"] = {
                                             "enabled": True,
                                             "source": "Clear_JSON",

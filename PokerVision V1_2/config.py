@@ -126,6 +126,11 @@ V06_ACTION_DECISION_STUB_DEFAULT_REASON = "v62_stub_check_then_check_fold_then_f
 V141_SOLVER_ACTION_DECISION_CANDIDATE_ENABLED = True
 V141_SOLVER_ACTION_DECISION_CANDIDATE_DIR_NAME = "Solver_Action_Decision_Candidate_JSON"
 
+# V1.5 Solver Action Runtime Plan Candidate publication layer.
+# Candidate is diagnostic only and must not replace Action_Runtime_Plan_JSON or enable real clicks.
+V15_SOLVER_ACTION_RUNTIME_PLAN_CANDIDATE_ENABLED = True
+V15_SOLVER_ACTION_RUNTIME_PLAN_CANDIDATE_DIR_NAME = "Solver_Action_Runtime_Plan_Candidate_JSON"
+
 # =============================================================================
 # 2.0.4. V0.7 ACTION_RUNTIME_PLAN CONTRACT
 # =============================================================================
