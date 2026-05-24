@@ -1,0 +1,60 @@
+{
+  "frame_id": "fixture_01_unopened_btn_rfi",
+  "board": {
+    "cards": [],
+    "street": "preflop"
+  },
+  "Total_pot": 1.5,
+  "players": {
+    "UTG": {
+      "stack": 100.0,
+      "fold": true,
+      "chips": false
+    },
+    "MP": {
+      "stack": 100.0,
+      "fold": true,
+      "chips": false
+    },
+    "CO": {
+      "stack": 100.0,
+      "fold": true,
+      "chips": false
+    },
+    "BTN": {
+      "hero": true,
+      "cards": [
+        "A_spades",
+        "K_diamonds"
+      ],
+      "stack": 100.0,
+      "fold": false,
+      "chips": false
+    },
+    "SB": {
+      "stack": 99.5,
+      "fold": false,
+      "chips": 0.5
+    },
+    "BB": {
+      "stack": 99.0,
+      "fold": false,
+      "chips": 1.0
+    }
+  },
+  "expected_engine_context": {
+    "street": "preflop",
+    "hero_hand": [
+      "As",
+      "Kd"
+    ],
+    "hero_pos": "BTN",
+    "player_count": 6,
+    "node_type": "unopened",
+    "opener_pos": null,
+    "three_bettor_pos": null,
+    "four_bettor_pos": null,
+    "limpers": 0,
+    "callers": 0
+  }
+}

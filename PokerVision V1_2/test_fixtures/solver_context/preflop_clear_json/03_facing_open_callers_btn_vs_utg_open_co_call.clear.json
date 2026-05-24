@@ -1,0 +1,60 @@
+{
+  "frame_id": "fixture_03_facing_open_callers_btn_vs_utg_open_co_call",
+  "board": {
+    "cards": [],
+    "street": "preflop"
+  },
+  "Total_pot": 6.5,
+  "players": {
+    "UTG": {
+      "stack": 97.5,
+      "fold": false,
+      "chips": 2.5
+    },
+    "MP": {
+      "stack": 100.0,
+      "fold": true,
+      "chips": false
+    },
+    "CO": {
+      "stack": 97.5,
+      "fold": false,
+      "chips": 2.5
+    },
+    "BTN": {
+      "hero": true,
+      "cards": [
+        "Q_spades",
+        "J_spades"
+      ],
+      "stack": 100.0,
+      "fold": false,
+      "chips": false
+    },
+    "SB": {
+      "stack": 99.5,
+      "fold": false,
+      "chips": 0.5
+    },
+    "BB": {
+      "stack": 99.0,
+      "fold": false,
+      "chips": 1.0
+    }
+  },
+  "expected_engine_context": {
+    "street": "preflop",
+    "hero_hand": [
+      "Qs",
+      "Js"
+    ],
+    "hero_pos": "BTN",
+    "player_count": 6,
+    "node_type": "facing_open_callers",
+    "opener_pos": "UTG",
+    "three_bettor_pos": null,
+    "four_bettor_pos": null,
+    "limpers": 0,
+    "callers": 1
+  }
+}
