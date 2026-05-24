@@ -121,6 +121,11 @@ V06_ACTION_DECISION_STUB_DEFAULT_ACTION = "check_fold"
 V06_ACTION_DECISION_STUB_DEFAULT_SIZE_POLICY = None
 V06_ACTION_DECISION_STUB_DEFAULT_REASON = "v62_stub_check_then_check_fold_then_fold"
 
+# V1.4.1 Solver Action Decision Candidate publication layer.
+# Candidate is diagnostic only and must not replace Action_Decision_JSON or Action_Runtime_Plan_JSON.
+V141_SOLVER_ACTION_DECISION_CANDIDATE_ENABLED = True
+V141_SOLVER_ACTION_DECISION_CANDIDATE_DIR_NAME = "Solver_Action_Decision_Candidate_JSON"
+
 # =============================================================================
 # 2.0.4. V0.7 ACTION_RUNTIME_PLAN CONTRACT
 # =============================================================================
