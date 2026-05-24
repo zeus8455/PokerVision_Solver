@@ -27,6 +27,7 @@ CHECKS = [
     ("engine_bridge_unit", ["test_poker_preflop_engine_bridge_unit.py"]),
     ("decision_serializer_unit", ["test_poker_engine_decision_serializer_unit.py"]),
     ("solver_preview_builder_unit", ["test_poker_preflop_solver_preview_builder_unit.py"]),
+    ("clear_solver_preview_adapter_unit", ["test_poker_clear_solver_preview_adapter_unit.py"]),
     ("real_clear_json_preview_audit", ["audit_real_clear_json_preflop_solver_preview.py"]),
 ]
 

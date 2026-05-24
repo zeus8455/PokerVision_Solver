@@ -18,7 +18,11 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 
 REQUIRED_CLEAR_TOP_LEVEL_KEYS = {"frame_id", "board", "Total_pot", "players"}
-ALLOWED_CLEAR_TOP_LEVEL_KEYS = REQUIRED_CLEAR_TOP_LEVEL_KEYS | {"click_result"}
+ALLOWED_CLEAR_TOP_LEVEL_KEYS = REQUIRED_CLEAR_TOP_LEVEL_KEYS | {
+    "click_result",
+    "engine_context",
+    "engine_decision_preview",
+}
 
 FORBIDDEN_CLEAR_KEYS = {
     "frame_name", "table_id", "hand_id", "action_event_id", "action_signature",
