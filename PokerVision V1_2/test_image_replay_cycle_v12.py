@@ -900,7 +900,7 @@ def _validate_clear_json_artifacts(
 
     action_runtime_plan_path_value = extracted.get("action_runtime_plan_json_path")
     if not action_runtime_plan_path_value:
-        errors.append("Active poker-state frame must include Action_Runtime_Plan_JSON path built from Action_Decision_JSON")
+        errors.append("Active poker-state frame must include Action_Runtime_Plan_JSON path built from selected runtime source")
     else:
         action_runtime_plan_path = Path(str(action_runtime_plan_path_value))
         if "Action_Runtime_Plan_JSON" not in action_runtime_plan_path.parts:
@@ -913,25 +913,42 @@ def _validate_clear_json_artifacts(
                 generated_action_runtime_plan_path = replay_output_dir / "generated_action_runtime_plan_json" / f"{index:03d}_{item.path.stem}.runtime_plan.json"
                 _write_json(generated_action_runtime_plan_path, action_runtime_plan_state)
                 extracted["generated_action_runtime_plan_json_path"] = str(generated_action_runtime_plan_path)
-                try:
-                    from logic.action_runtime_plan_builder import validate_action_runtime_plan_contract
+                runtime_plan_source = str(action_runtime_plan_state.get("source") or "")
+                extracted["action_runtime_plan_source"] = runtime_plan_source
 
-                    runtime_plan_validation = validate_action_runtime_plan_contract(action_runtime_plan_state)
-                    extracted["action_runtime_plan_builder_validation"] = runtime_plan_validation
-                    if not isinstance(runtime_plan_validation, dict) or not runtime_plan_validation.get("ok"):
-                        errors.append(f"action_runtime_plan_builder validation failed: {runtime_plan_validation}")
-                except Exception as exc:
-                    errors.append(f"action_runtime_plan_builder validation crashed: {exc}")
-                if action_runtime_plan_state.get("source") != "Action_Decision_JSON":
-                    errors.append("Action_Runtime_Plan_JSON.source must be Action_Decision_JSON")
+                if runtime_plan_source == "Solver_Action_Decision_Candidate_JSON":
+                    try:
+                        from logic.solver_runtime_plan_candidate import validate_solver_action_runtime_plan_candidate
+
+                        runtime_plan_validation = validate_solver_action_runtime_plan_candidate(action_runtime_plan_state)
+                        extracted["action_runtime_plan_builder_validation"] = runtime_plan_validation
+                        extracted["solver_action_runtime_plan_candidate_validation"] = runtime_plan_validation
+                        if not isinstance(runtime_plan_validation, dict) or not runtime_plan_validation.get("ok"):
+                            errors.append(f"solver_action_runtime_plan_candidate validation failed: {runtime_plan_validation}")
+                    except Exception as exc:
+                        errors.append(f"solver_action_runtime_plan_candidate validation crashed: {exc}")
+                elif runtime_plan_source == "Action_Decision_JSON":
+                    try:
+                        from logic.action_runtime_plan_builder import validate_action_runtime_plan_contract
+
+                        runtime_plan_validation = validate_action_runtime_plan_contract(action_runtime_plan_state)
+                        extracted["action_runtime_plan_builder_validation"] = runtime_plan_validation
+                        if not isinstance(runtime_plan_validation, dict) or not runtime_plan_validation.get("ok"):
+                            errors.append(f"action_runtime_plan_builder validation failed: {runtime_plan_validation}")
+                    except Exception as exc:
+                        errors.append(f"action_runtime_plan_builder validation crashed: {exc}")
+                else:
+                    errors.append(f"Action_Runtime_Plan_JSON.source must be a supported runtime source, got {runtime_plan_source!r}")
+
                 for forbidden_key in ("runtime_action", "click_result", "click_points", "bbox", "confidence", "mouse"):
                     if forbidden_key in action_runtime_plan_state:
                         errors.append(f"Action_Runtime_Plan_JSON must not contain technical/output key: {forbidden_key}")
             except Exception as exc:
                 errors.append(f"failed to read Action_Runtime_Plan_JSON: {exc}")
 
-    if extracted.get("runtime_action_source") != "Action_Decision_JSON":
-        errors.append(f"runtime_action.source must be Action_Decision_JSON, got {extracted.get('runtime_action_source')!r}")
+    runtime_action_source = extracted.get("runtime_action_source")
+    if runtime_action_source not in {"Action_Decision_JSON", "Solver_Action_Decision_Candidate_JSON"}:
+        errors.append(f"runtime_action.source must be a supported runtime source, got {runtime_action_source!r}")
     if not extracted.get("runtime_action_plan_present"):
         errors.append("runtime_action must include action_runtime_plan_contract for V0.7 audit")
 
@@ -953,54 +970,69 @@ def _validate_clear_json_artifacts(
     if action_runtime_plan_path_value_for_compare and action_decision_path_value_for_compare:
         try:
             runtime_plan_state_for_compare = _json_read(Path(str(action_runtime_plan_path_value_for_compare)))
-            action_decision_state_for_compare = _json_read(Path(str(action_decision_path_value_for_compare)))
-            if runtime_plan_state_for_compare.get("source_action_decision_frame_id") != action_decision_state_for_compare.get("source_decision_frame_id"):
-                errors.append(
-                    "Action_Runtime_Plan_JSON source_action_decision_frame_id must match Action_Decision_JSON source_decision_frame_id: "
-                    f"plan={runtime_plan_state_for_compare.get('source_action_decision_frame_id')!r}, "
-                    f"action={action_decision_state_for_compare.get('source_decision_frame_id')!r}"
-                )
-            plan_target_sequence = runtime_plan_state_for_compare.get("target_sequence")
-            plan_target_sequences = runtime_plan_state_for_compare.get("target_sequences")
-            action_target_buttons = action_decision_state_for_compare.get("target_button_classes")
+            runtime_plan_source_for_compare = str(runtime_plan_state_for_compare.get("source") or "")
 
-            if not isinstance(plan_target_sequence, list) or not plan_target_sequence:
-                errors.append(
-                    "Action_Runtime_Plan_JSON target_sequence must be a non-empty list: "
-                    f"plan={plan_target_sequence!r}"
-                )
-
-            if not isinstance(plan_target_sequences, list) or not plan_target_sequences:
-                errors.append(
-                    "Action_Runtime_Plan_JSON target_sequences must be a non-empty list: "
-                    f"plan={plan_target_sequences!r}"
-                )
-            elif list(plan_target_sequence) not in [list(seq) for seq in plan_target_sequences if isinstance(seq, list)]:
-                errors.append(
-                    "Action_Runtime_Plan_JSON target_sequence must be one of target_sequences: "
-                    f"target_sequence={plan_target_sequence!r}, target_sequences={plan_target_sequences!r}"
-                )
-
-            if isinstance(action_target_buttons, list) and action_target_buttons:
-                flattened_plan_buttons = []
-                if isinstance(plan_target_sequences, list):
-                    for seq in plan_target_sequences:
-                        if isinstance(seq, list):
-                            for button in seq:
-                                if button not in flattened_plan_buttons:
-                                    flattened_plan_buttons.append(button)
-
-                missing_action_buttons = [
-                    button for button in action_target_buttons
-                    if button not in flattened_plan_buttons
-                ]
-                if missing_action_buttons:
+            if runtime_plan_source_for_compare == "Action_Decision_JSON":
+                action_decision_state_for_compare = _json_read(Path(str(action_decision_path_value_for_compare)))
+                if runtime_plan_state_for_compare.get("source_action_decision_frame_id") != action_decision_state_for_compare.get("source_decision_frame_id"):
                     errors.append(
-                        "Action_Runtime_Plan_JSON target_sequences must cover Action_Decision_JSON fallback buttons: "
-                        f"missing={missing_action_buttons!r}, plan={plan_target_sequences!r}, action={action_target_buttons!r}"
+                        "Action_Runtime_Plan_JSON source_action_decision_frame_id must match Action_Decision_JSON source_decision_frame_id: "
+                        f"plan={runtime_plan_state_for_compare.get('source_action_decision_frame_id')!r}, "
+                        f"action={action_decision_state_for_compare.get('source_decision_frame_id')!r}"
                     )
+                plan_target_sequence = runtime_plan_state_for_compare.get("target_sequence")
+                plan_target_sequences = runtime_plan_state_for_compare.get("target_sequences")
+                action_target_buttons = action_decision_state_for_compare.get("target_button_classes")
+
+                if not isinstance(plan_target_sequence, list) or not plan_target_sequence:
+                    errors.append(
+                        "Action_Runtime_Plan_JSON target_sequence must be a non-empty list: "
+                        f"plan={plan_target_sequence!r}"
+                    )
+
+                if not isinstance(plan_target_sequences, list) or not plan_target_sequences:
+                    errors.append(
+                        "Action_Runtime_Plan_JSON target_sequences must be a non-empty list: "
+                        f"plan={plan_target_sequences!r}"
+                    )
+                elif list(plan_target_sequence) not in [list(seq) for seq in plan_target_sequences if isinstance(seq, list)]:
+                    errors.append(
+                        "Action_Runtime_Plan_JSON target_sequence must be one of target_sequences: "
+                        f"target_sequence={plan_target_sequence!r}, target_sequences={plan_target_sequences!r}"
+                    )
+
+                if isinstance(action_target_buttons, list) and action_target_buttons:
+                    flattened_plan_buttons = []
+                    if isinstance(plan_target_sequences, list):
+                        for seq in plan_target_sequences:
+                            if isinstance(seq, list):
+                                for button in seq:
+                                    if button not in flattened_plan_buttons:
+                                        flattened_plan_buttons.append(button)
+
+                    missing_action_buttons = [
+                        button for button in action_target_buttons
+                        if button not in flattened_plan_buttons
+                    ]
+                    if missing_action_buttons:
+                        errors.append(
+                            "Action_Runtime_Plan_JSON target_sequences must cover Action_Decision_JSON fallback buttons: "
+                            f"missing={missing_action_buttons!r}, plan={plan_target_sequences!r}, action={action_target_buttons!r}"
+                        )
+            elif runtime_plan_source_for_compare == "Solver_Action_Decision_Candidate_JSON":
+                try:
+                    from logic.solver_runtime_plan_candidate import validate_solver_action_runtime_plan_candidate
+
+                    solver_plan_validation = validate_solver_action_runtime_plan_candidate(runtime_plan_state_for_compare)
+                    extracted["solver_action_runtime_plan_candidate_compare_validation"] = solver_plan_validation
+                    if not isinstance(solver_plan_validation, dict) or not solver_plan_validation.get("ok"):
+                        errors.append(f"solver Action_Runtime_Plan_JSON compare validation failed: {solver_plan_validation}")
+                except Exception as exc:
+                    errors.append(f"solver Action_Runtime_Plan_JSON compare validation crashed: {exc}")
+            else:
+                errors.append(f"Action_Runtime_Plan_JSON compare source is unsupported: {runtime_plan_source_for_compare!r}")
         except Exception as exc:
-            errors.append(f"failed to compare Action_Runtime_Plan_JSON with Action_Decision_JSON: {exc}")
+            errors.append(f"failed to compare Action_Runtime_Plan_JSON with selected runtime source: {exc}")
 
     # Keep a copy under Test_Replay_Output for easy manual inspection, paired by replay index/source PNG.
     generated_clear_path = replay_output_dir / "generated_clear_json" / f"{index:03d}_{item.path.stem}.clear.json"

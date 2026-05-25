@@ -1,25 +1,25 @@
-r"""
+﻿r"""
 config.py
 
-PokerVision Core V1.2 / V0.9 — live desktop runtime configuration.
+PokerVision Core V1.2 / V0.9 вЂ” live desktop runtime configuration.
 
-Главные изменения V1:
-- тестовый запуск больше не считает каждую batch-группу по 6 изображений одной общей раздачей;
-- каждая область table_01 ... table_06 ведёт собственную runtime-историю;
-- новая раздача определяется по факту: strong Active + HERO cards Player_seat1;
-- продолжение раздачи определяется только внутри той же table-области по тем же HERO cards;
-- если Active отсутствует, кадр получает отдельный hand_N и не может иметь продолжения;
-- output JSON сохраняется по frame_name: hand_01_preflop, hand_01_flop,
-  hand_08_preflop_02 и т.д.;
-- V1.2 работает по реальному рабочему столу: анализирует 6 table-областей напрямую с monitor screenshot;
-- тестовые PNG больше не открываются и не используются в основном runtime;
-- solver пока остаётся временной заглушкой;
-- real-click ветка включается через защитные флаги ниже.
+Р“Р»Р°РІРЅС‹Рµ РёР·РјРµРЅРµРЅРёСЏ V1:
+- С‚РµСЃС‚РѕРІС‹Р№ Р·Р°РїСѓСЃРє Р±РѕР»СЊС€Рµ РЅРµ СЃС‡РёС‚Р°РµС‚ РєР°Р¶РґСѓСЋ batch-РіСЂСѓРїРїСѓ РїРѕ 6 РёР·РѕР±СЂР°Р¶РµРЅРёР№ РѕРґРЅРѕР№ РѕР±С‰РµР№ СЂР°Р·РґР°С‡РµР№;
+- РєР°Р¶РґР°СЏ РѕР±Р»Р°СЃС‚СЊ table_01 ... table_06 РІРµРґС‘С‚ СЃРѕР±СЃС‚РІРµРЅРЅСѓСЋ runtime-РёСЃС‚РѕСЂРёСЋ;
+- РЅРѕРІР°СЏ СЂР°Р·РґР°С‡Р° РѕРїСЂРµРґРµР»СЏРµС‚СЃСЏ РїРѕ С„Р°РєС‚Сѓ: strong Active + HERO cards Player_seat1;
+- РїСЂРѕРґРѕР»Р¶РµРЅРёРµ СЂР°Р·РґР°С‡Рё РѕРїСЂРµРґРµР»СЏРµС‚СЃСЏ С‚РѕР»СЊРєРѕ РІРЅСѓС‚СЂРё С‚РѕР№ Р¶Рµ table-РѕР±Р»Р°СЃС‚Рё РїРѕ С‚РµРј Р¶Рµ HERO cards;
+- РµСЃР»Рё Active РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚, РєР°РґСЂ РїРѕР»СѓС‡Р°РµС‚ РѕС‚РґРµР»СЊРЅС‹Р№ hand_N Рё РЅРµ РјРѕР¶РµС‚ РёРјРµС‚СЊ РїСЂРѕРґРѕР»Р¶РµРЅРёСЏ;
+- output JSON СЃРѕС…СЂР°РЅСЏРµС‚СЃСЏ РїРѕ frame_name: hand_01_preflop, hand_01_flop,
+  hand_08_preflop_02 Рё С‚.Рґ.;
+- V1.2 СЂР°Р±РѕС‚Р°РµС‚ РїРѕ СЂРµР°Р»СЊРЅРѕРјСѓ СЂР°Р±РѕС‡РµРјСѓ СЃС‚РѕР»Сѓ: Р°РЅР°Р»РёР·РёСЂСѓРµС‚ 6 table-РѕР±Р»Р°СЃС‚РµР№ РЅР°РїСЂСЏРјСѓСЋ СЃ monitor screenshot;
+- С‚РµСЃС‚РѕРІС‹Рµ PNG Р±РѕР»СЊС€Рµ РЅРµ РѕС‚РєСЂС‹РІР°СЋС‚СЃСЏ Рё РЅРµ РёСЃРїРѕР»СЊР·СѓСЋС‚СЃСЏ РІ РѕСЃРЅРѕРІРЅРѕРј runtime;
+- solver РїРѕРєР° РѕСЃС‚Р°С‘С‚СЃСЏ РІСЂРµРјРµРЅРЅРѕР№ Р·Р°РіР»СѓС€РєРѕР№;
+- real-click РІРµС‚РєР° РІРєР»СЋС‡Р°РµС‚СЃСЏ С‡РµСЂРµР· Р·Р°С‰РёС‚РЅС‹Рµ С„Р»Р°РіРё РЅРёР¶Рµ.
 
-Важно:
-- UI/скриншоты/crop/test_image не записываются в clean JSON;
-- raw bbox детекций не записываются в clean JSON;
-- клики могут выполняться только через slot guard + anti-repeat + human-like mouse runtime.
+Р’Р°Р¶РЅРѕ:
+- UI/СЃРєСЂРёРЅС€РѕС‚С‹/crop/test_image РЅРµ Р·Р°РїРёСЃС‹РІР°СЋС‚СЃСЏ РІ clean JSON;
+- raw bbox РґРµС‚РµРєС†РёР№ РЅРµ Р·Р°РїРёСЃС‹РІР°СЋС‚СЃСЏ РІ clean JSON;
+- РєР»РёРєРё РјРѕРіСѓС‚ РІС‹РїРѕР»РЅСЏС‚СЊСЃСЏ С‚РѕР»СЊРєРѕ С‡РµСЂРµР· slot guard + anti-repeat + human-like mouse runtime.
 """
 
 from __future__ import annotations
@@ -49,7 +49,7 @@ UI_START_MAXIMIZED = True
 UI_BOTTOM_BAR_HEIGHT = 96
 UI_MONITOR_REFRESH_MS = 350
 
-# Пауза между live-cycles. В V1.2 тестовые изображения не открываются.
+# РџР°СѓР·Р° РјРµР¶РґСѓ live-cycles. Р’ V1.2 С‚РµСЃС‚РѕРІС‹Рµ РёР·РѕР±СЂР°Р¶РµРЅРёСЏ РЅРµ РѕС‚РєСЂС‹РІР°СЋС‚СЃСЏ.
 DISPLAY_SETTLE_DELAY_MS = 500
 
 UI_LAUNCH_DISPLAY_DIR = PROJECT_ROOT / "ui_launch_display"
@@ -82,16 +82,16 @@ V12_LIVE_DATA_CAPTURE_NO_CLICK_MODE = not V81_CONTROLLED_LIVE_READY_PROFILE_ACTI
 # 2.0.1. V0.3 STRICT ACTIVE ACTION TRANSACTION GATE
 # =============================================================================
 
-# Включает строгую transaction-дисциплину для каждого table_N:
+# Р’РєР»СЋС‡Р°РµС‚ СЃС‚СЂРѕРіСѓСЋ transaction-РґРёСЃС†РёРїР»РёРЅСѓ РґР»СЏ РєР°Р¶РґРѕРіРѕ table_N:
 # Active -> table analysis -> Dark_JSON -> Clear_JSON candidate -> runtime action
-# -> click/dry-run result -> только после этого table_N освобождается.
+# -> click/dry-run result -> С‚РѕР»СЊРєРѕ РїРѕСЃР»Рµ СЌС‚РѕРіРѕ table_N РѕСЃРІРѕР±РѕР¶РґР°РµС‚СЃСЏ.
 V03_TABLE_ACTION_TRANSACTION_GATE_ENABLED = True
 
-# В no-click/live-data-capture/replay режиме dry-run считается завершённым click-cycle.
-# Это нужно, чтобы regression мог проверять transaction gate без реального клика.
+# Р’ no-click/live-data-capture/replay СЂРµР¶РёРјРµ dry-run СЃС‡РёС‚Р°РµС‚СЃСЏ Р·Р°РІРµСЂС€С‘РЅРЅС‹Рј click-cycle.
+# Р­С‚Рѕ РЅСѓР¶РЅРѕ, С‡С‚РѕР±С‹ regression РјРѕРі РїСЂРѕРІРµСЂСЏС‚СЊ transaction gate Р±РµР· СЂРµР°Р»СЊРЅРѕРіРѕ РєР»РёРєР°.
 V03_TRANSACTION_DRY_RUN_COUNTS_AS_COMPLETED = True
 
-# Если Active пропал до завершения action-cycle, transaction сбрасывается как aborted/released.
+# Р•СЃР»Рё Active РїСЂРѕРїР°Р» РґРѕ Р·Р°РІРµСЂС€РµРЅРёСЏ action-cycle, transaction СЃР±СЂР°СЃС‹РІР°РµС‚СЃСЏ РєР°Рє aborted/released.
 V03_TRANSACTION_RELEASE_ON_INACTIVE = True
 
 # =============================================================================
@@ -133,7 +133,7 @@ V15_SOLVER_ACTION_RUNTIME_PLAN_CANDIDATE_DIR_NAME = "Solver_Action_Runtime_Plan_
 
 # V1.6 Controlled solver-candidate runtime switch.
 # Default OFF. Intended first for dry-run only. Must not enable real clicks.
-V16_USE_SOLVER_CANDIDATE_AS_RUNTIME_SOURCE = False
+V16_USE_SOLVER_CANDIDATE_AS_RUNTIME_SOURCE = True
 V16_SOLVER_CANDIDATE_RUNTIME_DRY_RUN_ONLY = True
 V16_SOLVER_CANDIDATE_RUNTIME_ALLOW_REAL_CLICK = False
 V16_SOLVER_CANDIDATE_RUNTIME_SOURCE_LABEL = "Solver_Action_Decision_Candidate_JSON"
@@ -498,23 +498,23 @@ def get_v31_controlled_live_click_gate_snapshot() -> dict:
 # 2.1. V1 TEST REPLAY SETTINGS
 # =============================================================================
 
-# Тестовый replay всё ещё может одновременно показывать до 6 столов,
-# но раздачи теперь живут отдельно по table_N, а не как один общий batch hand.
+# РўРµСЃС‚РѕРІС‹Р№ replay РІСЃС‘ РµС‰С‘ РјРѕР¶РµС‚ РѕРґРЅРѕРІСЂРµРјРµРЅРЅРѕ РїРѕРєР°Р·С‹РІР°С‚СЊ РґРѕ 6 СЃС‚РѕР»РѕРІ,
+# РЅРѕ СЂР°Р·РґР°С‡Рё С‚РµРїРµСЂСЊ Р¶РёРІСѓС‚ РѕС‚РґРµР»СЊРЅРѕ РїРѕ table_N, Р° РЅРµ РєР°Рє РѕРґРёРЅ РѕР±С‰РёР№ batch hand.
 UI_MAX_VISIBLE_TABLES = 6
 UI_PROCESS_ALL_IMAGES_IN_TEST_DIR = True
 UI_CLOSE_WINDOWS_BETWEEN_PASSES = True
 
-# Имена исходных тестовых файлов используются только для восстановления
-# заранее подготовленного replay-порядка, чтобы в UI воспроизвести реальный таймлайн.
-# Runtime identity/output naming ниже никогда не берутся из имени исходного файла.
+# РРјРµРЅР° РёСЃС…РѕРґРЅС‹С… С‚РµСЃС‚РѕРІС‹С… С„Р°Р№Р»РѕРІ РёСЃРїРѕР»СЊР·СѓСЋС‚СЃСЏ С‚РѕР»СЊРєРѕ РґР»СЏ РІРѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРёСЏ
+# Р·Р°СЂР°РЅРµРµ РїРѕРґРіРѕС‚РѕРІР»РµРЅРЅРѕРіРѕ replay-РїРѕСЂСЏРґРєР°, С‡С‚РѕР±С‹ РІ UI РІРѕСЃРїСЂРѕРёР·РІРµСЃС‚Рё СЂРµР°Р»СЊРЅС‹Р№ С‚Р°Р№РјР»Р°Р№РЅ.
+# Runtime identity/output naming РЅРёР¶Рµ РЅРёРєРѕРіРґР° РЅРµ Р±РµСЂСѓС‚СЃСЏ РёР· РёРјРµРЅРё РёСЃС…РѕРґРЅРѕРіРѕ С„Р°Р№Р»Р°.
 TEST_REPLAY_USE_SOURCE_FILE_NAMES_FOR_ORDER_ONLY = True
 TEST_REPLAY_REQUIRE_HAND_STYLE_FILE_NAMES = True
 
-# Формат runtime hand numbering: hand_01, hand_02, ...
+# Р¤РѕСЂРјР°С‚ runtime hand numbering: hand_01, hand_02, ...
 RUNTIME_HAND_ID_PREFIX = "hand"
 RUNTIME_HAND_NUMBER_MIN_WIDTH = 2
 
-# Оставлены как compatibility aliases для старых импортов.
+# РћСЃС‚Р°РІР»РµРЅС‹ РєР°Рє compatibility aliases РґР»СЏ СЃС‚Р°СЂС‹С… РёРјРїРѕСЂС‚РѕРІ.
 UI_IMAGES_PER_HAND = UI_MAX_VISIBLE_TABLES
 UI_TEST_HAND_ID_PREFIX = RUNTIME_HAND_ID_PREFIX
 UI_REQUIRE_IMAGE_COUNT_DIVISIBLE_BY_SLOTS = False
@@ -559,8 +559,8 @@ SAVE_DEBUG_PLAYER_SEAT_CROPS = False
 SAVE_DEBUG_AMOUNT_CROPS = False
 SAVE_DEBUG_CARD_CROPS = False
 
-# Дополнительный итоговый JSON для кадров, где найден класс Active.
-# Создаётся после обычного clean JSON:
+# Р”РѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹Р№ РёС‚РѕРіРѕРІС‹Р№ JSON РґР»СЏ РєР°РґСЂРѕРІ, РіРґРµ РЅР°Р№РґРµРЅ РєР»Р°СЃСЃ Active.
+# РЎРѕР·РґР°С‘С‚СЃСЏ РїРѕСЃР»Рµ РѕР±С‹С‡РЅРѕРіРѕ clean JSON:
 # outputs/ui_display_cycle/current_cycle/active_frames/table_N/frame_name.json
 ACTIVE_FRAME_EXPORT_ENABLED = False
 ACTIVE_FRAME_OUTPUT_DIR_NAME = "active_frames"
@@ -659,7 +659,7 @@ TABLE_STRUCTURE_CLASSES = [
     "Total_pot",
 ]
 
-# BBox используется runtime-слоем для crop следующего stage, но в clean JSON не пишется.
+# BBox РёСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ runtime-СЃР»РѕРµРј РґР»СЏ crop СЃР»РµРґСѓСЋС‰РµРіРѕ stage, РЅРѕ РІ clean JSON РЅРµ РїРёС€РµС‚СЃСЏ.
 TABLE_STRUCTURE_WRITE_BBOX_TO_CLEAN_JSON = False
 
 
@@ -741,7 +741,7 @@ CARD_INFERENCE_IOU = 0.45
 CARD_INFERENCE_IMGSZ = 640
 CARD_DEVICE = None
 
-# В текущем контракте проекта Player_seat1 всегда HERO.
+# Р’ С‚РµРєСѓС‰РµРј РєРѕРЅС‚СЂР°РєС‚Рµ РїСЂРѕРµРєС‚Р° Player_seat1 РІСЃРµРіРґР° HERO.
 CARD_HERO_SEAT_NAME = "Player_seat1"
 
 CARD_CLASSES = [
