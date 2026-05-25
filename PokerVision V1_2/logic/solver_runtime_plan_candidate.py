@@ -23,6 +23,14 @@ from logic.solver_action_decision_candidate import validate_solver_action_decisi
 
 
 SCHEMA_VERSION = "solver_action_runtime_plan_candidate_v1"
+UNSUPPORTED_RAISE_WITHOUT_SIZE_POLICY_REASON = "unsupported_raise_without_size_policy"
+UNSUPPORTED_RAISE_WITHOUT_EXECUTABLE_SEQUENCE_REASON = "unsupported_raise_without_executable_target_sequence"
+
+
+def _raise_candidate_is_missing_size_policy(candidate: Dict[str, Any]) -> bool:
+    action = str(candidate.get("action") or "").strip().lower()
+    return action in {"raise", "bet"} and not isinstance(candidate.get("size_policy"), dict)
+
 
 
 def _candidate_to_transient_action_decision(candidate: Dict[str, Any]) -> Dict[str, Any]:
@@ -50,13 +58,34 @@ def _candidate_to_transient_action_decision(candidate: Dict[str, Any]) -> Dict[s
 
 
 def build_solver_action_runtime_plan_candidate(candidate: Dict[str, Any]) -> Dict[str, Any]:
-    """Build diagnostic runtime plan candidate from Solver_Action_Decision_Candidate_JSON."""
+    """Build diagnostic runtime plan candidate from Solver_Action_Decision_Candidate_JSON.
+
+    V1.9.1 safety rule:
+    raise/bet candidates without an explicit size_policy are not executable.
+    They must not become the selected solver runtime source, even in dry-run,
+    because the downstream button sequence cannot be proven before a future
+    real-click enablement stage.
+    """
+    if _raise_candidate_is_missing_size_policy(candidate):
+        raise ValueError(UNSUPPORTED_RAISE_WITHOUT_SIZE_POLICY_REASON)
+
     transient_action_decision = _candidate_to_transient_action_decision(candidate)
 
     runtime_plan = build_action_runtime_plan_from_action_decision(transient_action_decision)
     validation = validate_action_runtime_plan_contract(runtime_plan)
     if not isinstance(validation, dict) or not validation.get("ok"):
         raise ValueError(f"Runtime plan candidate is not valid: {validation}")
+
+    planned_action = str(runtime_plan.get("planned_action") or "").strip().lower()
+    target_sequence = runtime_plan.get("target_sequence")
+    target_sequences = runtime_plan.get("target_sequences")
+    if planned_action in {"bet_raise", "raise", "bet"} and (
+        not isinstance(target_sequence, list)
+        or not target_sequence
+        or not isinstance(target_sequences, list)
+        or not target_sequences
+    ):
+        raise ValueError(UNSUPPORTED_RAISE_WITHOUT_EXECUTABLE_SEQUENCE_REASON)
 
     candidate_plan = dict(runtime_plan)
     candidate_plan.update({
