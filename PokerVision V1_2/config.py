@@ -131,6 +131,13 @@ V141_SOLVER_ACTION_DECISION_CANDIDATE_DIR_NAME = "Solver_Action_Decision_Candida
 V15_SOLVER_ACTION_RUNTIME_PLAN_CANDIDATE_ENABLED = True
 V15_SOLVER_ACTION_RUNTIME_PLAN_CANDIDATE_DIR_NAME = "Solver_Action_Runtime_Plan_Candidate_JSON"
 
+# V1.6 Controlled solver-candidate runtime switch.
+# Default OFF. Intended first for dry-run only. Must not enable real clicks.
+V16_USE_SOLVER_CANDIDATE_AS_RUNTIME_SOURCE = False
+V16_SOLVER_CANDIDATE_RUNTIME_DRY_RUN_ONLY = True
+V16_SOLVER_CANDIDATE_RUNTIME_ALLOW_REAL_CLICK = False
+V16_SOLVER_CANDIDATE_RUNTIME_SOURCE_LABEL = "Solver_Action_Decision_Candidate_JSON"
+
 # =============================================================================
 # 2.0.4. V0.7 ACTION_RUNTIME_PLAN CONTRACT
 # =============================================================================

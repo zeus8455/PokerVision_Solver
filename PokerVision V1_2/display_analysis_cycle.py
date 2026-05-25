@@ -75,6 +75,10 @@ from config import (
     V141_SOLVER_ACTION_DECISION_CANDIDATE_DIR_NAME,
     V15_SOLVER_ACTION_RUNTIME_PLAN_CANDIDATE_ENABLED,
     V15_SOLVER_ACTION_RUNTIME_PLAN_CANDIDATE_DIR_NAME,
+    V16_USE_SOLVER_CANDIDATE_AS_RUNTIME_SOURCE,
+    V16_SOLVER_CANDIDATE_RUNTIME_DRY_RUN_ONLY,
+    V16_SOLVER_CANDIDATE_RUNTIME_ALLOW_REAL_CLICK,
+    V16_SOLVER_CANDIDATE_RUNTIME_SOURCE_LABEL,
     V07_ACTION_RUNTIME_PLAN_ENABLED,
     V07_ACTION_RUNTIME_PLAN_DIR_NAME,
     V10_JSON_COMPLETE_DIR_NAME,
@@ -1575,6 +1579,72 @@ def build_and_save_solver_action_decision_candidate_contract(
             "status": "error",
         }
 
+
+
+
+def build_solver_candidate_runtime_source_guard() -> Dict[str, object]:
+    """Return V1.6 controlled-switch guard for using solver candidate as runtime source."""
+    real_click_flags = {
+        "V11_CLICK_DRY_RUN": bool(V11_CLICK_DRY_RUN),
+        "V11_REAL_MOUSE_CLICK_ENABLED": bool(V11_REAL_MOUSE_CLICK_ENABLED),
+        "V11_TRIGGER_UI_SERVICE_REAL_CLICK_ENABLED": bool(V11_TRIGGER_UI_SERVICE_REAL_CLICK_ENABLED),
+        "V16_SOLVER_CANDIDATE_RUNTIME_ALLOW_REAL_CLICK": bool(V16_SOLVER_CANDIDATE_RUNTIME_ALLOW_REAL_CLICK),
+    }
+
+    enabled = bool(V16_USE_SOLVER_CANDIDATE_AS_RUNTIME_SOURCE)
+
+    if not enabled:
+        return {
+            "enabled": False,
+            "allowed": False,
+            "source": V16_SOLVER_CANDIDATE_RUNTIME_SOURCE_LABEL,
+            "reason": "v16_switch_disabled",
+            "real_click_flags": real_click_flags,
+        }
+
+    if not bool(V16_SOLVER_CANDIDATE_RUNTIME_DRY_RUN_ONLY):
+        return {
+            "enabled": True,
+            "allowed": False,
+            "source": V16_SOLVER_CANDIDATE_RUNTIME_SOURCE_LABEL,
+            "reason": "v16_dry_run_only_guard_disabled",
+            "real_click_flags": real_click_flags,
+        }
+
+    if bool(V16_SOLVER_CANDIDATE_RUNTIME_ALLOW_REAL_CLICK):
+        return {
+            "enabled": True,
+            "allowed": False,
+            "source": V16_SOLVER_CANDIDATE_RUNTIME_SOURCE_LABEL,
+            "reason": "v16_real_click_not_allowed_for_candidate_source",
+            "real_click_flags": real_click_flags,
+        }
+
+    if not bool(V11_CLICK_DRY_RUN):
+        return {
+            "enabled": True,
+            "allowed": False,
+            "source": V16_SOLVER_CANDIDATE_RUNTIME_SOURCE_LABEL,
+            "reason": "v16_blocked_because_click_dry_run_is_false",
+            "real_click_flags": real_click_flags,
+        }
+
+    if bool(V11_REAL_MOUSE_CLICK_ENABLED) or bool(V11_TRIGGER_UI_SERVICE_REAL_CLICK_ENABLED):
+        return {
+            "enabled": True,
+            "allowed": False,
+            "source": V16_SOLVER_CANDIDATE_RUNTIME_SOURCE_LABEL,
+            "reason": "v16_blocked_because_real_click_flag_is_enabled",
+            "real_click_flags": real_click_flags,
+        }
+
+    return {
+        "enabled": True,
+        "allowed": True,
+        "source": V16_SOLVER_CANDIDATE_RUNTIME_SOURCE_LABEL,
+        "reason": "v16_allowed_dry_run_only",
+        "real_click_flags": real_click_flags,
+    }
 
 
 def build_and_save_solver_action_runtime_plan_candidate_contract(
