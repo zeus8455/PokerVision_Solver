@@ -1424,9 +1424,11 @@ def build_and_save_action_runtime_plan_contract(
                 cycle_dir=cycle_dir,
                 table_id=table_id,
             )
+            solver_candidate_runtime_source_guard = build_solver_candidate_runtime_source_guard()
             return {
                 "enabled": True,
                 "source": "Action_Decision_JSON",
+                "solver_candidate_runtime_source_guard": solver_candidate_runtime_source_guard,
                 "path": str(path),
                 "dir": V07_ACTION_RUNTIME_PLAN_DIR_NAME,
                 "validation": validation,
