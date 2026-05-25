@@ -1,13 +1,14 @@
 """
 logic/action_button_runtime_policy.py
-PokerVision V1.1.1 — controlled Action_Button runtime policy.
+PokerVision V1.1.1 вЂ” controlled Action_Button runtime policy.
 
 Purpose:
 - Keep real-click button semantics deterministic and separated from YOLO output.
 - Convert an Action_Decision / Action_Runtime_Plan action into allowed button sequences.
 - Restrict first controlled real-click tests to low-risk simple actions:
   fold / check / call / check_fold.
-- Explicitly block bet/raise sizing branch for the first real-click stage.
+- Explicitly block bet/raise real-click sizing branch for the first real-click stage.
+- V1.10.1 allows supported bet/raise size sequences for dry-run plan diagnostics only.
 
 This module does not run YOLO and does not click the mouse.
 It only decides whether a detected Action_Button sequence is allowed.
@@ -130,6 +131,44 @@ def normalize_detected_classes(values: Optional[Iterable[Any]]) -> List[str]:
     return result
 
 
+_VALID_SIZE_PCTS: Set[int] = {33, 50, 70, 98}
+
+
+def _normalize_size_pct_from_policy(size_policy: Any) -> Optional[int]:
+    """Return supported pct size from solver/runtime size_policy.
+
+    Accepts either:
+    - {"kind": "pct", "value": 98}
+    - {"type": "pct", "value": 98}
+    - direct values like 98 / "98" / "98%"
+    """
+    if size_policy is None or size_policy == "":
+        return None
+
+    raw_value: Any = None
+    if isinstance(size_policy, dict):
+        kind = str(size_policy.get("kind") or size_policy.get("type") or "").strip().lower()
+        if kind and kind != "pct":
+            return None
+        raw_value = size_policy.get("value")
+    else:
+        raw_value = size_policy
+
+    if raw_value is None or raw_value == "":
+        return None
+
+    try:
+        if isinstance(raw_value, str):
+            raw_value = raw_value.strip().replace("%", "")
+        value = int(float(raw_value))
+    except Exception:
+        return None
+
+    if value not in _VALID_SIZE_PCTS:
+        return None
+    return value
+
+
 def build_controlled_target_sequences(action: Any, size_policy: Any = None) -> List[List[str]]:
     """Return ordered button alternatives for the first controlled real-click stage.
 
@@ -147,8 +186,13 @@ def build_controlled_target_sequences(action: Any, size_policy: Any = None) -> L
     if normalized == "check_fold":
         return [["Check"], ["Check/fold"], ["FOLD"]]
     if normalized == "bet_raise":
-        # Deliberately keep the future sizing branch out of controlled V1.1.1 real-click.
-        return []
+        size_pct = _normalize_size_pct_from_policy(size_policy)
+        if size_pct is None:
+            # Deliberately keep unsupported/no-size raises out of runtime plans.
+            return []
+        # V1.10.1: allow a sizing sequence to be built for dry-run diagnostics only.
+        # Real-click execution for bet/raise remains blocked by resolve_action_button_runtime_policy.
+        return [[f"{size_pct}%", "Bet/Raise"]]
     return []
 
 
@@ -185,6 +229,18 @@ def resolve_action_button_runtime_policy(
     sequences = build_controlled_target_sequences(normalized_action, size_policy)
 
     if normalized_action in BLOCKED_FIRST_REAL_CLICK_ACTIONS:
+        # V1.10.1: dry-run plan building may publish a non-click executable sequence
+        # for supported bet/raise sizes. Any detector-backed or real-click attempt is
+        # still blocked until a dedicated real-click safety stage exists.
+        if not bool(real_click_enabled) and not detected and sequences:
+            return ActionButtonRuntimePolicyResult(
+                ok=True,
+                action=normalized_action,
+                selected_sequence=list(sequences[0]),
+                target_sequences=[list(seq) for seq in sequences],
+                detected_classes=[],
+                real_click_allowed=False,
+            ).to_dict()
         return ActionButtonRuntimePolicyResult(
             ok=False,
             action=normalized_action,

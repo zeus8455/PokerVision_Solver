@@ -24,6 +24,64 @@ def _copy_optional(source: Dict[str, Any], key: str) -> Any:
     return source.get(key) if isinstance(source, dict) else None
 
 
+
+def _is_missing_size_pct(value: Any) -> bool:
+    """Return True when the preview has no usable size percentage."""
+    if value is None:
+        return True
+    if isinstance(value, str) and not value.strip():
+        return True
+    return False
+
+
+def _with_reason_suffix(reason: Any, suffix: str) -> str:
+    base = str(reason or "").strip()
+    if not base:
+        return suffix
+    if suffix in base:
+        return base
+    return f"{base}|{suffix}"
+
+
+def _apply_preflop_iso_raise_default_size(
+    *,
+    safe_context: Dict[str, Any],
+    safe_decision: Dict[str, Any],
+) -> None:
+    """
+    V1.10: make a narrow, Clear_JSON-safe size default for preflop iso-raise.
+
+    This rule is intentionally limited to:
+    - street=preflop
+    - node_type=facing_limp
+    - engine_action=raise
+    - missing size_pct
+
+    It does not affect generic raises, 3bets/4bets, postflop raises, calls, folds,
+    or already-sized solver decisions.
+    """
+    street = str(safe_context.get("street") or "").strip().lower()
+    node_type = str(safe_context.get("node_type") or "").strip().lower()
+    engine_action = str(safe_decision.get("engine_action") or "").strip().lower()
+
+    if (
+        street == "preflop"
+        and node_type == "facing_limp"
+        and engine_action == "raise"
+        and _is_missing_size_pct(safe_decision.get("size_pct"))
+    ):
+        safe_decision["size_pct"] = 98
+        safe_decision["reason"] = _with_reason_suffix(
+            safe_decision.get("reason"),
+            "v110_default_iso_raise_98",
+        )
+        preflop = safe_decision.get("preflop")
+        if isinstance(preflop, dict):
+            meta = preflop.get("meta") if isinstance(preflop.get("meta"), dict) else {}
+            meta = dict(meta)
+            meta["v110_default_size_policy"] = "iso_raise_98"
+            preflop["meta"] = meta
+
 def build_clear_safe_solver_preview_blocks(solver_preview: Dict[str, Any]) -> Optional[Dict[str, Dict[str, Any]]]:
     """Return Clear_JSON-safe solver blocks or None if solver preview is not OK."""
     if not isinstance(solver_preview, dict) or solver_preview.get("status") != "ok":
@@ -90,6 +148,11 @@ def build_clear_safe_solver_preview_blocks(solver_preview: Dict[str, Any]) -> Op
         "source_frame_id": decision_preview.get("source_frame_id"),
         "preflop": safe_preflop,
     }
+
+    _apply_preflop_iso_raise_default_size(
+        safe_context=safe_context,
+        safe_decision=safe_decision,
+    )
 
     return {
         "engine_context": safe_context,
