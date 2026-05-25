@@ -43,26 +43,53 @@ def _with_reason_suffix(reason: Any, suffix: str) -> str:
     return f"{base}|{suffix}"
 
 
-def _apply_preflop_iso_raise_default_size(
+def _set_default_preflop_raise_size(
+    *,
+    safe_decision: Dict[str, Any],
+    size_pct: int,
+    reason_suffix: str,
+    meta_key: str,
+    meta_value: str,
+) -> None:
+    safe_decision["size_pct"] = int(size_pct)
+    safe_decision["reason"] = _with_reason_suffix(safe_decision.get("reason"), reason_suffix)
+
+    preflop = safe_decision.get("preflop")
+    if isinstance(preflop, dict):
+        meta = preflop.get("meta") if isinstance(preflop.get("meta"), dict) else {}
+        meta = dict(meta)
+        meta[meta_key] = meta_value
+        preflop["meta"] = meta
+
+
+def _apply_preflop_default_raise_sizes(
     *,
     safe_context: Dict[str, Any],
     safe_decision: Dict[str, Any],
 ) -> None:
     """
-    V1.10: make a narrow, Clear_JSON-safe size default for preflop iso-raise.
+    V1.10/V1.11: make narrow, Clear_JSON-safe size defaults for preflop raises.
 
-    This rule is intentionally limited to:
+    V1.10 applies only to iso-raise vs limp:
     - street=preflop
     - node_type=facing_limp
     - engine_action=raise
     - missing size_pct
 
-    It does not affect generic raises, 3bets/4bets, postflop raises, calls, folds,
+    V1.11 applies only to 3bet vs open:
+    - street=preflop
+    - node_type=facing_open
+    - engine_action=raise
+    - reason contains preflop:3bet
+    - missing size_pct
+
+    These rules do not affect generic raises, postflop raises, calls, folds,
     or already-sized solver decisions.
     """
     street = str(safe_context.get("street") or "").strip().lower()
     node_type = str(safe_context.get("node_type") or "").strip().lower()
     engine_action = str(safe_decision.get("engine_action") or "").strip().lower()
+    reason = str(safe_decision.get("reason") or "").strip().lower()
 
     if (
         street == "preflop"
@@ -70,17 +97,29 @@ def _apply_preflop_iso_raise_default_size(
         and engine_action == "raise"
         and _is_missing_size_pct(safe_decision.get("size_pct"))
     ):
-        safe_decision["size_pct"] = 98
-        safe_decision["reason"] = _with_reason_suffix(
-            safe_decision.get("reason"),
-            "v110_default_iso_raise_98",
+        _set_default_preflop_raise_size(
+            safe_decision=safe_decision,
+            size_pct=98,
+            reason_suffix="v110_default_iso_raise_98",
+            meta_key="v110_default_size_policy",
+            meta_value="iso_raise_98",
         )
-        preflop = safe_decision.get("preflop")
-        if isinstance(preflop, dict):
-            meta = preflop.get("meta") if isinstance(preflop.get("meta"), dict) else {}
-            meta = dict(meta)
-            meta["v110_default_size_policy"] = "iso_raise_98"
-            preflop["meta"] = meta
+        return
+
+    if (
+        street == "preflop"
+        and node_type == "facing_open"
+        and engine_action == "raise"
+        and "preflop:3bet" in reason
+        and _is_missing_size_pct(safe_decision.get("size_pct"))
+    ):
+        _set_default_preflop_raise_size(
+            safe_decision=safe_decision,
+            size_pct=98,
+            reason_suffix="v111_default_3bet_98",
+            meta_key="v111_default_size_policy",
+            meta_value="threebet_98",
+        )
 
 def build_clear_safe_solver_preview_blocks(solver_preview: Dict[str, Any]) -> Optional[Dict[str, Dict[str, Any]]]:
     """Return Clear_JSON-safe solver blocks or None if solver preview is not OK."""
@@ -149,7 +188,7 @@ def build_clear_safe_solver_preview_blocks(solver_preview: Dict[str, Any]) -> Op
         "preflop": safe_preflop,
     }
 
-    _apply_preflop_iso_raise_default_size(
+    _apply_preflop_default_raise_sizes(
         safe_context=safe_context,
         safe_decision=safe_decision,
     )
