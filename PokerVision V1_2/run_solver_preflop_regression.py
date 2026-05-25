@@ -38,6 +38,7 @@ CHECKS = [
     ("solver_candidate_runtime_source_guard_enabled_unit", ["test_solver_candidate_runtime_source_guard_enabled_unit.py"]),
     ("solver_candidate_shadow_runtime_source_unit", ["test_solver_candidate_shadow_runtime_source_unit.py"]),
     ("solver_runtime_source_guard_audit", ["audit_solver_runtime_source_guard.py", "--root", "C:/PokerVision_Solver/Script_Test_PokerVision_All_files/Test_Replay_Output/ui_display_cycle/current_cycle"]),
+    ("runtime_plan_source_selection_unit", ["test_runtime_plan_source_selection_unit.py"]),
     ("real_clear_json_preview_audit", ["audit_real_clear_json_preflop_solver_preview.py"]),
 ]
 

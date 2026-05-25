@@ -1399,6 +1399,76 @@ def _release_failed_active_finalization_if_needed(
 
     return release_payload
 
+
+def build_runtime_plan_source_selection_contract(
+    *,
+    action_decision_state: Dict[str, object],
+    solver_candidate_state: Optional[Dict[str, Any]] = None,
+) -> Dict[str, object]:
+    """V1.7.1 select runtime source without saving files or clicking."""
+    guard = build_solver_candidate_runtime_source_guard()
+
+    if not bool(guard.get("allowed")):
+        return {
+            "selected_source": "Action_Decision_JSON",
+            "reason": str(guard.get("reason") or "solver_candidate_source_not_allowed"),
+            "guard": guard,
+            "action_decision_state": action_decision_state,
+            "solver_candidate_state": None,
+        }
+
+    if not isinstance(solver_candidate_state, dict) or not solver_candidate_state:
+        return {
+            "selected_source": "Action_Decision_JSON",
+            "reason": "solver_candidate_state_missing",
+            "guard": guard,
+            "action_decision_state": action_decision_state,
+            "solver_candidate_state": None,
+        }
+
+    try:
+        runtime_candidate_plan = build_solver_action_runtime_plan_candidate(solver_candidate_state)
+        runtime_candidate_validation = validate_solver_action_runtime_plan_candidate(runtime_candidate_plan)
+        if not runtime_candidate_validation.get("ok"):
+            return {
+                "selected_source": "Action_Decision_JSON",
+                "reason": "solver_candidate_runtime_plan_validation_failed",
+                "guard": guard,
+                "validation": runtime_candidate_validation,
+                "action_decision_state": action_decision_state,
+                "solver_candidate_state": solver_candidate_state,
+            }
+
+        if runtime_candidate_plan.get("real_click_enabled") is not False:
+            return {
+                "selected_source": "Action_Decision_JSON",
+                "reason": "solver_candidate_runtime_plan_real_click_not_false",
+                "guard": guard,
+                "action_decision_state": action_decision_state,
+                "solver_candidate_state": solver_candidate_state,
+            }
+
+        return {
+            "selected_source": "Solver_Action_Decision_Candidate_JSON",
+            "reason": "v17_1_solver_candidate_selected_dry_run_only",
+            "guard": guard,
+            "runtime_candidate_plan": runtime_candidate_plan,
+            "runtime_candidate_validation": runtime_candidate_validation,
+            "action_decision_state": action_decision_state,
+            "solver_candidate_state": solver_candidate_state,
+        }
+
+    except Exception as exc:
+        return {
+            "selected_source": "Action_Decision_JSON",
+            "reason": "solver_candidate_runtime_plan_build_error",
+            "message": str(exc),
+            "guard": guard,
+            "action_decision_state": action_decision_state,
+            "solver_candidate_state": solver_candidate_state,
+        }
+
+
 def build_and_save_action_runtime_plan_contract(
     *,
     action_decision_state: Dict[str, object],
