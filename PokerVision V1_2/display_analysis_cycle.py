@@ -1474,6 +1474,7 @@ def build_and_save_action_runtime_plan_contract(
     action_decision_state: Dict[str, object],
     cycle_dir: Path,
     table_id: str,
+    solver_candidate_state: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, object]:
     """Build/save Action_Runtime_Plan_JSON and return a Dark_JSON contract block."""
     if not V07_ACTION_RUNTIME_PLAN_ENABLED:
@@ -1486,8 +1487,19 @@ def build_and_save_action_runtime_plan_contract(
         }
 
     try:
-        runtime_plan_state = build_action_runtime_plan_from_action_decision(action_decision_state)
-        validation = validate_action_runtime_plan_contract(runtime_plan_state)
+        source_selection = build_runtime_plan_source_selection_contract(
+            action_decision_state=action_decision_state,
+            solver_candidate_state=solver_candidate_state,
+        )
+        selected_source = str(source_selection.get("selected_source") or "Action_Decision_JSON")
+
+        if selected_source == "Solver_Action_Decision_Candidate_JSON":
+            runtime_plan_state = dict(source_selection.get("runtime_candidate_plan") or {})
+            validation = validate_solver_action_runtime_plan_candidate(runtime_plan_state)
+        else:
+            runtime_plan_state = build_action_runtime_plan_from_action_decision(action_decision_state)
+            validation = validate_action_runtime_plan_contract(runtime_plan_state)
+
         if validation.get("ok"):
             path = save_action_runtime_plan_table_frame_json(
                 runtime_plan_state=runtime_plan_state,
@@ -1497,7 +1509,8 @@ def build_and_save_action_runtime_plan_contract(
             solver_candidate_runtime_source_guard = build_solver_candidate_runtime_source_guard()
             return {
                 "enabled": True,
-                "source": "Action_Decision_JSON",
+                "source": selected_source,
+                "runtime_source_selection": source_selection,
                 "solver_candidate_runtime_source_guard": solver_candidate_runtime_source_guard,
                 "path": str(path),
                 "dir": V07_ACTION_RUNTIME_PLAN_DIR_NAME,

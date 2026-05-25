@@ -55,6 +55,7 @@ def audit_runtime_source_guard(root: Path) -> Dict[str, Any]:
 
         source = runtime_contract.get("source")
         guard = runtime_contract.get("solver_candidate_runtime_source_guard")
+        selection = runtime_contract.get("runtime_source_selection")
 
         if source == "Action_Decision_JSON":
             counters["runtime_source_action_decision_json"] += 1
@@ -84,11 +85,35 @@ def audit_runtime_source_guard(root: Path) -> Dict[str, Any]:
             counters["guard_reason_other"] += 1
             errors.append({"path": str(path), "reason": "guard_reason_other", "guard_reason": reason})
 
+        if not isinstance(selection, dict):
+            counters["runtime_source_selection_missing"] += 1
+            errors.append({"path": str(path), "reason": "runtime_source_selection_missing"})
+            continue
+
+        counters["runtime_source_selection_present"] += 1
+
+        selected_source = selection.get("selected_source")
+        selection_reason = selection.get("reason")
+
+        if selected_source == "Action_Decision_JSON":
+            counters["selection_source_action_decision_json"] += 1
+        else:
+            counters["selection_source_other"] += 1
+            errors.append({"path": str(path), "reason": "selection_source_other", "selected_source": selected_source})
+
+        if selection_reason == "v16_switch_disabled":
+            counters["selection_reason_switch_disabled"] += 1
+        else:
+            counters["selection_reason_other"] += 1
+            errors.append({"path": str(path), "reason": "selection_reason_other", "selection_reason": selection_reason})
+
         examples.append({
             "file": path.name,
             "runtime_source": source,
             "guard_allowed": allowed,
             "guard_reason": reason,
+            "selected_source": selection.get("selected_source") if isinstance(selection, dict) else None,
+            "selection_reason": selection.get("reason") if isinstance(selection, dict) else None,
         })
 
     return {
@@ -122,6 +147,12 @@ def print_report(report: Dict[str, Any]) -> int:
         "guard_allowed_not_false",
         "guard_reason_switch_disabled",
         "guard_reason_other",
+        "runtime_source_selection_present",
+        "runtime_source_selection_missing",
+        "selection_source_action_decision_json",
+        "selection_source_other",
+        "selection_reason_switch_disabled",
+        "selection_reason_other",
     ]:
         print(f"  {key}: {counters.get(key, 0)}")
 
@@ -130,7 +161,8 @@ def print_report(report: Dict[str, Any]) -> int:
     for item in report.get("examples", [])[:20]:
         print(
             f"  {item.get('file')} | source={item.get('runtime_source')} "
-            f"| allowed={item.get('guard_allowed')} | reason={item.get('guard_reason')}"
+            f"| allowed={item.get('guard_allowed')} | reason={item.get('guard_reason')} "
+            f"| selected={item.get('selected_source')} | selection_reason={item.get('selection_reason')}"
         )
 
     errors = report.get("errors") or []

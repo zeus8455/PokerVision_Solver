@@ -71,6 +71,8 @@ def test_shadow_runtime_source_builds_solver_runtime_plans_in_dry_run() -> None:
 
         status_counter: dict[str, int] = {}
         action_pairs: list[tuple[str, str, str]] = []
+        expected_ok = 0
+        expected_blocked = 0
 
         for path in files:
             candidate = _load_json(path)
@@ -94,16 +96,19 @@ def test_shadow_runtime_source_builds_solver_runtime_plans_in_dry_run() -> None:
             planned_action = str(plan.get("planned_action"))
 
             if candidate_action == "raise":
+                expected_blocked += 1
                 assert planned_action in {"raise", "bet_raise"}
                 assert plan["status"] == "blocked"
                 assert plan["blocked_reason"] == "bet_raise_branch_disabled_for_v1_1_first_real_click_stage"
             else:
+                expected_ok += 1
                 assert planned_action == candidate_action
                 assert plan["status"] == "ok"
                 assert plan["target_sequence"]
 
-        assert status_counter.get("ok", 0) == 10
-        assert status_counter.get("blocked", 0) == 1
+        assert status_counter.get("ok", 0) == expected_ok
+        assert status_counter.get("blocked", 0) == expected_blocked
+        assert expected_ok + expected_blocked == len(files)
 
     finally:
         _restore_guard(original)
