@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from logic.poker_preflop_context_builder import build_preflop_engine_context
 from logic.poker_preflop_solver_preview_builder import build_preflop_context_from_engine_context
@@ -247,7 +247,7 @@ def test_preflop_action_model_builds_cold_4bet_context():
     )
 
 
-def test_players_chips_fallback_does_not_claim_advanced_3bet_yet():
+def test_action_model_builder_default_path_does_not_claim_advanced_3bet_without_raise_data():
     ctx = build_preflop_engine_context(
         _clear_json(
             frame_id="scenario_players_chips_fallback_current_limit",
@@ -257,7 +257,7 @@ def test_players_chips_fallback_does_not_claim_advanced_3bet_yet():
     )
 
     assert ctx["status"] == "ok", ctx
-    assert ctx["meta"]["inference_source"] == "players_chips_fallback"
+    assert ctx["meta"]["inference_source"] == "preflop_action_model_builder"
     assert ctx["node_type"] in {"unopened", "facing_limp", "facing_open", "facing_open_callers"}
     assert ctx["three_bettor_pos"] is None
     assert ctx["four_bettor_pos"] is None
@@ -273,7 +273,7 @@ if __name__ == "__main__":
         test_preflop_action_model_builds_opener_vs_3bet_context,
         test_preflop_action_model_builds_threebettor_vs_4bet_context,
         test_preflop_action_model_builds_cold_4bet_context,
-        test_players_chips_fallback_does_not_claim_advanced_3bet_yet,
+        test_action_model_builder_default_path_does_not_claim_advanced_3bet_without_raise_data,
     ]
 
     for test in tests:
@@ -281,4 +281,3 @@ if __name__ == "__main__":
         print(f"[OK] {test.__name__}")
 
     print("[RESULT] OK: V2.0.2 preflop engine context scenario tests passed.")
-

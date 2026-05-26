@@ -11,6 +11,8 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, Tuple
 
+from logic.preflop_action_model_builder import build_preflop_action_model_from_clear_json
+
 
 SCHEMA_VERSION = "poker_engine_context_v1"
 SUPPORTED_POSITIONS = {"UTG", "MP", "CO", "BTN", "SB", "BB"}
@@ -281,8 +283,13 @@ def build_preflop_engine_context(clear_json: Dict[str, Any]) -> Dict[str, Any]:
         inferred = _build_from_action_model(model, hero_pos)
         inference_source = "preflop_action_model"
     else:
-        inferred = _infer_simple_from_players(players, hero_pos)
-        inference_source = "players_chips_fallback"
+        built_model = build_preflop_action_model_from_clear_json(clear_json)
+        if isinstance(built_model, dict) and built_model.get("status") == "ok":
+            inferred = _build_from_action_model(built_model, hero_pos)
+            inference_source = "preflop_action_model_builder"
+        else:
+            inferred = _infer_simple_from_players(players, hero_pos)
+            inference_source = "players_chips_fallback"
 
     context = {
         "schema_version": SCHEMA_VERSION,

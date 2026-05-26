@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from logic.preflop_action_model_builder import build_preflop_action_model_from_clear_json
 from logic.poker_preflop_context_builder import build_preflop_engine_context
@@ -121,6 +121,24 @@ def test_builder_output_integrates_with_engine_context_builder_for_opener_vs_3be
     assert preflop_context.opener_pos == "UTG"
     assert preflop_context.three_bettor_pos == "BTN"
 
+
+def test_engine_context_builder_uses_action_model_builder_when_model_missing():
+    state = _clear(hero_pos="UTG", chips={"UTG": 2.5, "BTN": 8.0, "SB": 0.5, "BB": 1.0})
+
+    ctx = build_preflop_engine_context(state)
+    preflop_context = build_preflop_context_from_engine_context(ctx)
+
+    assert "preflop_action_model" not in state
+    assert ctx["status"] == "ok"
+    assert ctx["node_type"] == "opener_vs_3bet"
+    assert ctx["opener_pos"] == "UTG"
+    assert ctx["three_bettor_pos"] == "BTN"
+    assert ctx["four_bettor_pos"] is None
+    assert ctx["meta"]["inference_source"] == "preflop_action_model_builder"
+
+    assert preflop_context.node_type == "opener_vs_3bet"
+    assert preflop_context.opener_pos == "UTG"
+    assert preflop_context.three_bettor_pos == "BTN"
 def test_non_preflop_is_skipped():
     state = _clear(hero_pos="BB")
     state["board"] = {"street": "flop", "cards": ["A_spades", "K_hearts", "2_clubs"]}
@@ -149,6 +167,7 @@ if __name__ == "__main__":
         test_builds_facing_open_callers_from_open_and_caller,
         test_builds_opener_vs_3bet_when_hero_is_opener,
         test_builder_output_integrates_with_engine_context_builder_for_opener_vs_3bet,
+        test_engine_context_builder_uses_action_model_builder_when_model_missing,
         test_non_preflop_is_skipped,
         test_missing_hero_is_error,
     ]
@@ -158,4 +177,3 @@ if __name__ == "__main__":
         print(f"[OK] {test.__name__}")
 
     print("[RESULT] OK: V2.0.3 preflop action model builder unit tests passed.")
-
