@@ -150,6 +150,10 @@ from logic.v2_preflop_live_gate import (
     build_v2_preflop_live_gate,
     validate_v2_preflop_live_gate_report,
 )
+from logic.v21_preflop_real_click_preflight_gate import (
+    build_v21_preflop_real_click_preflight_gate,
+    validate_v21_preflop_real_click_preflight_gate_report,
+)
 from logic.table_action_transaction_gate import TableActionTransactionGate
 from pipeline.card_detection_pipeline import run_card_detection_pipeline
 from pipeline.digit_amounts_pipeline import run_digit_amounts_pipeline
@@ -1471,12 +1475,21 @@ def build_runtime_plan_source_selection_contract(
                 "solver_candidate_state": solver_candidate_state,
             }
 
+        v21_preflop_real_click_preflight_gate = build_v21_preflop_real_click_preflight_gate(
+            runtime_candidate_plan
+        )
+        v21_preflop_real_click_preflight_gate_validation = validate_v21_preflop_real_click_preflight_gate_report(
+            v21_preflop_real_click_preflight_gate
+        )
+
         return {
             "selected_source": "Solver_Action_Decision_Candidate_JSON",
             "reason": "v17_1_solver_candidate_selected_dry_run_only",
             "guard": guard,
             "v2_preflop_live_gate": v2_preflop_live_gate,
             "v2_preflop_live_gate_validation": v2_preflop_live_gate_validation,
+            "v21_preflop_real_click_preflight_gate": v21_preflop_real_click_preflight_gate,
+            "v21_preflop_real_click_preflight_gate_validation": v21_preflop_real_click_preflight_gate_validation,
             "runtime_candidate_plan": runtime_candidate_plan,
             "runtime_candidate_validation": runtime_candidate_validation,
             "action_decision_state": action_decision_state,
