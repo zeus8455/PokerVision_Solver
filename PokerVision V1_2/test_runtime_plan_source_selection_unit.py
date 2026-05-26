@@ -163,6 +163,7 @@ def test_source_selection_exposes_v21_preflop_preflight_diagnostics_for_raise() 
 def main() -> None:
     test_source_selection_defaults_to_action_decision_when_guard_disabled()
     test_source_selection_can_select_solver_candidate_in_dry_run_guard_mode()
+    test_source_selection_exposes_v21_preflop_preflight_diagnostics_for_raise()
     print("[RESULT] OK: runtime plan source selection unit tests passed.")
 
 

@@ -1475,6 +1475,11 @@ def build_runtime_plan_source_selection_contract(
                 "solver_candidate_state": solver_candidate_state,
             }
 
+        if isinstance(runtime_candidate_plan, dict) and not isinstance(runtime_candidate_plan.get("decision_context"), dict):
+            solver_decision_context = solver_candidate_state.get("decision_context")
+            if isinstance(solver_decision_context, dict):
+                runtime_candidate_plan["decision_context"] = dict(solver_decision_context)
+
         v21_preflop_real_click_preflight_gate = build_v21_preflop_real_click_preflight_gate(
             runtime_candidate_plan
         )
@@ -1533,6 +1538,15 @@ def build_and_save_action_runtime_plan_contract(
 
         if selected_source == "Solver_Action_Decision_Candidate_JSON":
             runtime_plan_state = dict(source_selection.get("runtime_candidate_plan") or {})
+
+            v21_preflight = source_selection.get("v21_preflop_real_click_preflight_gate")
+            if isinstance(v21_preflight, dict):
+                runtime_plan_state["v21_preflop_real_click_preflight_gate"] = dict(v21_preflight)
+
+            v21_preflight_validation = source_selection.get("v21_preflop_real_click_preflight_gate_validation")
+            if isinstance(v21_preflight_validation, dict):
+                runtime_plan_state["v21_preflop_real_click_preflight_gate_validation"] = dict(v21_preflight_validation)
+
             validation = validate_solver_action_runtime_plan_candidate(runtime_plan_state)
         else:
             runtime_plan_state = build_action_runtime_plan_from_action_decision(action_decision_state)
