@@ -149,6 +149,10 @@ def build_clear_safe_solver_preview_blocks(solver_preview: Dict[str, Any]) -> Op
         "action_history": list(engine_context.get("action_history") or []),
     }
 
+    engine_context_meta = engine_context.get("meta")
+    if isinstance(engine_context_meta, dict):
+        safe_context["meta"] = dict(engine_context_meta)
+
     preflop = decision_preview.get("preflop") if isinstance(decision_preview.get("preflop"), dict) else {}
     range_source = preflop.get("range_source") if isinstance(preflop.get("range_source"), dict) else None
 
