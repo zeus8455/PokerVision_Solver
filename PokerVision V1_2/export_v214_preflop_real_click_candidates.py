@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 """
 export_v214_preflop_real_click_candidates.py
@@ -39,6 +39,38 @@ def _read_json(path: Path) -> Dict[str, Any] | None:
 
 def _safe_list(value: Any) -> list[Any]:
     return list(value) if isinstance(value, list) else []
+
+
+def _infer_table_id_from_path(path: Path) -> str:
+    for part in path.parts:
+        part = str(part)
+        if part.startswith("table_"):
+            return part
+    return ""
+
+
+def _infer_table_id_from_payload(payload: Dict[str, Any]) -> str:
+    for key in (
+        "table_id",
+        "source_action_decision_frame_id",
+        "source_solver_candidate_frame_id",
+        "source_clear_frame_id",
+        "source_frame_id",
+        "frame_id",
+    ):
+        value = str(payload.get(key) or "")
+        if value.startswith("table_"):
+            parts = value.split("_")
+            if len(parts) >= 2:
+                return f"{parts[0]}_{parts[1]}"
+
+    decision_context = payload.get("decision_context")
+    if isinstance(decision_context, dict):
+        value = str(decision_context.get("table_id") or "")
+        if value:
+            return value
+
+    return ""
 
 
 def build_export(root: Path = DEFAULT_ROOT) -> Dict[str, Any]:
@@ -107,9 +139,17 @@ def build_export(root: Path = DEFAULT_ROOT) -> Dict[str, Any]:
             })
             continue
 
+        decision_context = payload.get("decision_context") if isinstance(payload.get("decision_context"), dict) else {}
+        decision_context = dict(decision_context)
+
+        table_id = str(decision_context.get("table_id") or payload.get("table_id") or _infer_table_id_from_payload(payload) or _infer_table_id_from_path(path) or "")
+        if table_id:
+            decision_context["table_id"] = table_id
+
         candidate = {
             "schema_version": "v214_preflop_real_click_candidate_v1",
             "source_runtime_plan_path": str(path),
+            "table_id": table_id,
             "source": payload.get("source"),
             "source_action_decision_frame_id": payload.get("source_action_decision_frame_id"),
             "source_solver_candidate_frame_id": payload.get("source_solver_candidate_frame_id"),
@@ -120,7 +160,7 @@ def build_export(root: Path = DEFAULT_ROOT) -> Dict[str, Any]:
             "runtime_branch": payload.get("runtime_branch"),
             "dry_run": payload.get("dry_run"),
             "real_click_enabled": payload.get("real_click_enabled"),
-            "decision_context": payload.get("decision_context") if isinstance(payload.get("decision_context"), dict) else {},
+            "decision_context": decision_context,
             "v21_preflight": {
                 "ok": preflight.get("ok"),
                 "allowed": preflight.get("allowed"),
