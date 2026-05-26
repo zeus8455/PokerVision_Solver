@@ -146,6 +146,10 @@ from logic.solver_runtime_plan_candidate import (
     build_solver_action_runtime_plan_candidate,
     validate_solver_action_runtime_plan_candidate,
 )
+from logic.v2_preflop_live_gate import (
+    build_v2_preflop_live_gate,
+    validate_v2_preflop_live_gate_report,
+)
 from logic.table_action_transaction_gate import TableActionTransactionGate
 from pipeline.card_detection_pipeline import run_card_detection_pipeline
 from pipeline.digit_amounts_pipeline import run_digit_amounts_pipeline
@@ -1448,10 +1452,31 @@ def build_runtime_plan_source_selection_contract(
                 "solver_candidate_state": solver_candidate_state,
             }
 
+        v2_preflop_live_gate = build_v2_preflop_live_gate(
+            solver_candidate_state=solver_candidate_state,
+            runtime_candidate_plan=runtime_candidate_plan,
+        )
+        v2_preflop_live_gate_validation = validate_v2_preflop_live_gate_report(v2_preflop_live_gate)
+
+        if not bool(v2_preflop_live_gate_validation.get("ok")):
+            return {
+                "selected_source": "Action_Decision_JSON",
+                "reason": "v2_preflop_live_gate_validation_failed",
+                "guard": guard,
+                "v2_preflop_live_gate": v2_preflop_live_gate,
+                "v2_preflop_live_gate_validation": v2_preflop_live_gate_validation,
+                "runtime_candidate_plan": runtime_candidate_plan,
+                "runtime_candidate_validation": runtime_candidate_validation,
+                "action_decision_state": action_decision_state,
+                "solver_candidate_state": solver_candidate_state,
+            }
+
         return {
             "selected_source": "Solver_Action_Decision_Candidate_JSON",
             "reason": "v17_1_solver_candidate_selected_dry_run_only",
             "guard": guard,
+            "v2_preflop_live_gate": v2_preflop_live_gate,
+            "v2_preflop_live_gate_validation": v2_preflop_live_gate_validation,
             "runtime_candidate_plan": runtime_candidate_plan,
             "runtime_candidate_validation": runtime_candidate_validation,
             "action_decision_state": action_decision_state,
