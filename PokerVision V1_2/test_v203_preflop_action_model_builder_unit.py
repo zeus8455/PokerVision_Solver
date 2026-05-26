@@ -96,6 +96,45 @@ def test_builds_opener_vs_3bet_when_hero_is_opener():
     assert model["four_bettor_pos"] is None
     assert {"pos": "UTG", "action": "open_raise", "amount_bb": 2.5} in model["actions"]
     assert {"pos": "BTN", "action": "3bet", "amount_bb": 8.0} in model["actions"]
+def test_single_frame_does_not_claim_threebettor_vs_4bet_without_history():
+    model = build_preflop_action_model_from_clear_json(
+        _clear(hero_pos="BTN", chips={"UTG": 22.0, "BTN": 8.0, "SB": 0.5, "BB": 1.0})
+    )
+
+    assert model["status"] == "ok"
+    assert model["node_type"] != "threebettor_vs_4bet"
+    assert model["meta"]["inference_source"] == "players_chips_single_frame"
+
+
+def test_builds_cold_4bet_when_hero_is_cold_4bettor():
+    model = build_preflop_action_model_from_clear_json(
+        _clear(hero_pos="SB", chips={"UTG": 2.5, "BTN": 8.0, "SB": 22.0, "BB": 1.0})
+    )
+
+    assert model["status"] == "ok"
+    assert model["node_type"] == "cold_4bet"
+    assert model["opener_pos"] == "UTG"
+    assert model["three_bettor_pos"] == "BTN"
+    assert model["four_bettor_pos"] == "SB"
+    assert {"pos": "SB", "action": "cold_4bet", "amount_bb": 22.0} in model["actions"]
+def test_engine_context_builder_uses_action_model_builder_for_cold_4bet():
+    state = _clear(hero_pos="SB", chips={"UTG": 2.5, "BTN": 8.0, "SB": 22.0, "BB": 1.0})
+
+    ctx = build_preflop_engine_context(state)
+    preflop_context = build_preflop_context_from_engine_context(ctx)
+
+    assert "preflop_action_model" not in state
+    assert ctx["status"] == "ok"
+    assert ctx["node_type"] == "cold_4bet"
+    assert ctx["opener_pos"] == "UTG"
+    assert ctx["three_bettor_pos"] == "BTN"
+    assert ctx["four_bettor_pos"] == "SB"
+    assert ctx["meta"]["inference_source"] == "preflop_action_model_builder"
+
+    assert preflop_context.node_type == "cold_4bet"
+    assert preflop_context.opener_pos == "UTG"
+    assert preflop_context.three_bettor_pos == "BTN"
+    assert preflop_context.four_bettor_pos == "SB"
 
 def test_builder_output_integrates_with_engine_context_builder_for_opener_vs_3bet():
     state = _clear(hero_pos="UTG", chips={"UTG": 2.5, "BTN": 8.0, "SB": 0.5, "BB": 1.0})
@@ -166,6 +205,9 @@ if __name__ == "__main__":
         test_builds_facing_open_from_open_raise,
         test_builds_facing_open_callers_from_open_and_caller,
         test_builds_opener_vs_3bet_when_hero_is_opener,
+        test_single_frame_does_not_claim_threebettor_vs_4bet_without_history,
+        test_builds_cold_4bet_when_hero_is_cold_4bettor,
+        test_engine_context_builder_uses_action_model_builder_for_cold_4bet,
         test_builder_output_integrates_with_engine_context_builder_for_opener_vs_3bet,
         test_engine_context_builder_uses_action_model_builder_when_model_missing,
         test_non_preflop_is_skipped,

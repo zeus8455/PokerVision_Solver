@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 """
 logic/preflop_action_model_builder.py
@@ -179,6 +179,9 @@ def build_preflop_action_model_from_clear_json(clear_json: Dict[str, Any]) -> Di
             {"pos": opener_pos, "action": "open_raise", "amount_bb": open_amount}
         ]
 
+        four_bettor_pos = None
+        fourbet_amount = None
+
         for pos, amount in contributions:
             if pos == opener_pos:
                 continue
@@ -188,6 +191,40 @@ def build_preflop_action_model_from_clear_json(clear_json: Dict[str, Any]) -> Di
             elif amount > open_amount and three_bettor_pos is None:
                 three_bettor_pos = pos
                 threebet_amount = amount
+            elif three_bettor_pos is not None and amount > float(threebet_amount or 0.0) and four_bettor_pos is None:
+                four_bettor_pos = pos
+                fourbet_amount = amount
+
+        if three_bettor_pos and four_bettor_pos:
+            action_name = "cold_4bet" if four_bettor_pos not in {opener_pos, three_bettor_pos} else "4bet"
+            actions.append({"pos": three_bettor_pos, "action": "3bet", "amount_bb": threebet_amount})
+            actions.append({"pos": four_bettor_pos, "action": action_name, "amount_bb": fourbet_amount})
+
+            if hero_pos == three_bettor_pos:
+                node_type = "threebettor_vs_4bet"
+            elif hero_pos == four_bettor_pos and four_bettor_pos not in {opener_pos, three_bettor_pos}:
+                node_type = "cold_4bet"
+            elif hero_pos == opener_pos:
+                node_type = "opener_vs_3bet"
+            else:
+                node_type = "facing_open"
+
+            return {
+                "status": "ok",
+                "node_type": node_type,
+                "opener_pos": opener_pos,
+                "three_bettor_pos": three_bettor_pos,
+                "four_bettor_pos": four_bettor_pos,
+                "limpers": 0,
+                "callers": callers,
+                "actions": actions,
+                "meta": {
+                    "builder": "preflop_action_model_builder_v1",
+                    "inference_source": "players_chips_single_frame",
+                    "hero_pos": hero_pos,
+                    "scope": "v2_0_5_4bet_single_frame",
+                },
+            }
 
         if three_bettor_pos:
             actions.append({"pos": three_bettor_pos, "action": "3bet", "amount_bb": threebet_amount})
@@ -242,5 +279,3 @@ def build_preflop_action_model_from_clear_json(clear_json: Dict[str, Any]) -> Di
             "hero_pos": hero_pos,
         },
     }
-
-
