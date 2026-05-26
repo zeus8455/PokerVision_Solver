@@ -57,6 +57,68 @@ def _candidate_to_transient_action_decision(candidate: Dict[str, Any]) -> Dict[s
     }
 
 
+def _candidate_is_preflop_raise_98(candidate: Dict[str, Any]) -> bool:
+    action = str(candidate.get("action") or "").strip().lower()
+    if action not in {"raise", "bet"}:
+        return False
+
+    decision_context = candidate.get("decision_context")
+    if not isinstance(decision_context, dict):
+        return False
+
+    street = str(decision_context.get("street") or "").strip().lower()
+    if street != "preflop":
+        return False
+
+    size_policy = candidate.get("size_policy")
+    if not isinstance(size_policy, dict):
+        return False
+
+    pct = size_policy.get("pct")
+    try:
+        pct_value = int(pct)
+    except Exception:
+        return False
+
+    target_button_classes = candidate.get("target_button_classes")
+    if not isinstance(target_button_classes, list):
+        return False
+
+    return pct_value == 98 and target_button_classes == ["98%", "Bet/Raise"]
+
+
+def _build_preflop_raise_98_runtime_plan(candidate: Dict[str, Any]) -> Dict[str, Any]:
+    source_frame_id = str(candidate.get("source_clear_frame_id") or "")
+    decision_context = dict(candidate.get("decision_context") or {})
+
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "source": "Solver_Action_Decision_Candidate_JSON",
+        "source_solver_candidate_frame_id": source_frame_id,
+        "source_action_decision_frame_id": source_frame_id,
+        "status": "ok",
+        "planned_action": "bet_raise",
+        "target_sequence": ["98%", "Bet/Raise"],
+        "target_sequences": [["98%", "Bet/Raise"]],
+        "runtime_branch": "action_button",
+        "policy_stage": "v2_0_9_preflop_raise_98_dryrun_only",
+        "policy_version": "v2.0.9_preflop_raise_sequence_dryrun",
+        "raise_branch_enabled": True,
+        "dry_run_required": True,
+        "dry_run": True,
+        "real_click_enabled": False,
+        "solver_stub": False,
+        "diagnostic_candidate": True,
+        "does_not_replace_runtime_plan": True,
+        "does_not_enable_real_click": True,
+        "solver_candidate_decision_id": candidate.get("decision_id"),
+        "solver_candidate_fingerprint": candidate.get("solver_fingerprint"),
+        "candidate_reason": "preflop_raise_98_runtime_plan_built_from_solver_action_candidate",
+        "candidate_size_policy": dict(candidate.get("size_policy") or {}),
+        "decision_context": decision_context,
+    }
+
+
 def build_solver_action_runtime_plan_candidate(candidate: Dict[str, Any]) -> Dict[str, Any]:
     """Build diagnostic runtime plan candidate from Solver_Action_Decision_Candidate_JSON.
 
@@ -68,6 +130,9 @@ def build_solver_action_runtime_plan_candidate(candidate: Dict[str, Any]) -> Dic
     """
     if _raise_candidate_is_missing_size_policy(candidate):
         raise ValueError(UNSUPPORTED_RAISE_WITHOUT_SIZE_POLICY_REASON)
+
+    if _candidate_is_preflop_raise_98(candidate):
+        return _build_preflop_raise_98_runtime_plan(candidate)
 
     transient_action_decision = _candidate_to_transient_action_decision(candidate)
 

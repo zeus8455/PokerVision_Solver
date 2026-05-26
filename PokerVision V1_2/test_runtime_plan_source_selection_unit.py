@@ -40,14 +40,25 @@ def _load_first_solver_candidate() -> dict:
 
 
 def test_source_selection_defaults_to_action_decision_when_guard_disabled() -> None:
-    selected = dac.build_runtime_plan_source_selection_contract(
-        action_decision_state=_sample_action_decision_state(),
-        solver_candidate_state=_load_first_solver_candidate(),
-    )
+    original = {
+        "V16_USE_SOLVER_CANDIDATE_AS_RUNTIME_SOURCE": dac.V16_USE_SOLVER_CANDIDATE_AS_RUNTIME_SOURCE,
+    }
 
-    assert selected["selected_source"] == "Action_Decision_JSON"
-    assert selected["reason"] == "v16_switch_disabled"
-    assert selected["guard"]["allowed"] is False
+    try:
+        dac.V16_USE_SOLVER_CANDIDATE_AS_RUNTIME_SOURCE = False
+
+        selected = dac.build_runtime_plan_source_selection_contract(
+            action_decision_state=_sample_action_decision_state(),
+            solver_candidate_state=_load_first_solver_candidate(),
+        )
+
+        assert selected["selected_source"] == "Action_Decision_JSON"
+        assert selected["reason"] == "v16_switch_disabled"
+        assert selected["guard"]["allowed"] is False
+
+    finally:
+        for name, value in original.items():
+            setattr(dac, name, value)
 
 
 def test_source_selection_can_select_solver_candidate_in_dry_run_guard_mode() -> None:

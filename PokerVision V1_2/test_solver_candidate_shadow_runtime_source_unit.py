@@ -96,10 +96,13 @@ def test_shadow_runtime_source_builds_solver_runtime_plans_in_dry_run() -> None:
             planned_action = str(plan.get("planned_action"))
 
             if candidate_action == "raise":
-                expected_blocked += 1
-                assert planned_action in {"raise", "bet_raise"}
-                assert plan["status"] == "blocked"
-                assert plan["blocked_reason"] == "bet_raise_branch_disabled_for_v1_1_first_real_click_stage"
+                expected_ok += 1
+                assert planned_action == "bet_raise"
+                assert plan["status"] == "ok"
+                assert plan["target_sequence"] == ["98%", "Bet/Raise"]
+                assert plan["target_sequences"] == [["98%", "Bet/Raise"]]
+                assert plan["real_click_enabled"] is False
+                assert plan["does_not_enable_real_click"] is True
             else:
                 expected_ok += 1
                 assert planned_action == candidate_action

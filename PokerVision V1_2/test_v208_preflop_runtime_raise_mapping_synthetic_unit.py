@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 """
 test_v208_preflop_runtime_raise_mapping_synthetic_unit.py
@@ -10,7 +10,6 @@ It documents current safety behavior before preflop-only raise runtime enablemen
 """
 
 from logic.solver_runtime_plan_candidate import (
-    UNSUPPORTED_RAISE_WITHOUT_EXECUTABLE_SEQUENCE_REASON,
     UNSUPPORTED_RAISE_WITHOUT_SIZE_POLICY_REASON,
     build_solver_action_runtime_plan_candidate,
     validate_solver_action_runtime_plan_candidate,
@@ -84,34 +83,40 @@ def test_preflop_raise_without_size_policy_is_rejected():
         raise AssertionError("raise without size_policy must be rejected")
 
 
-def test_preflop_raise_with_size_policy_is_still_blocked_by_current_runtime_policy():
-    try:
-        build_solver_action_runtime_plan_candidate(
-            _candidate(
-                "raise",
-                size_policy={"pct": 98},
-                target_button_classes=["98%", "Bet/Raise"],
-                reason="preflop:3bet|v208_size_policy_present",
-            )
+def test_preflop_raise_with_size_policy_builds_dryrun_sequence():
+    plan = build_solver_action_runtime_plan_candidate(
+        _candidate(
+            "raise",
+            size_policy={"pct": 98},
+            target_button_classes=["98%", "Bet/Raise"],
+            reason="preflop:3bet|v209_size_policy_present",
         )
-    except ValueError as exc:
-        assert str(exc) == UNSUPPORTED_RAISE_WITHOUT_EXECUTABLE_SEQUENCE_REASON
-    else:
-        raise AssertionError("raise with size_policy must remain blocked until preflop-only raise gate")
+    )
+    validation = validate_solver_action_runtime_plan_candidate(plan)
+
+    assert validation["ok"], validation
+    assert plan["status"] == "ok"
+    assert plan["planned_action"] == "bet_raise"
+    assert plan["target_sequence"] == ["98%", "Bet/Raise"]
+    assert plan["target_sequences"] == [["98%", "Bet/Raise"]]
+    assert plan["dry_run"] is True
+    assert plan["real_click_enabled"] is False
+    assert plan["does_not_enable_real_click"] is True
+    assert plan["policy_stage"] == "v2_0_9_preflop_raise_98_dryrun_only"
 
 
 def main() -> None:
     tests = [
         test_fold_call_check_solver_candidates_build_runtime_plans,
         test_preflop_raise_without_size_policy_is_rejected,
-        test_preflop_raise_with_size_policy_is_still_blocked_by_current_runtime_policy,
+        test_preflop_raise_with_size_policy_builds_dryrun_sequence,
     ]
 
     for test in tests:
         test()
         print(f"[OK] {test.__name__}")
 
-    print("[RESULT] OK: V2.0.8 preflop runtime raise mapping synthetic safety tests passed.")
+    print("[RESULT] OK: V2.0.9 preflop runtime raise mapping synthetic dry-run tests passed.")
 
 
 if __name__ == "__main__":
