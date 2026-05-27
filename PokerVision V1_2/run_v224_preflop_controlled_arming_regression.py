@@ -40,6 +40,7 @@ CHECKS = [
     ("v244_source_switch_default_safe_audit", ["audit_v244_source_switch_default_safe.py"]),
     ("v246_live_preflight_dryrun_command_contract", ["audit_v246_live_preflight_dryrun_command_contract.py"]),
     ("v248_live_dryrun_command_profile", ["profile_v248_live_dryrun_command.py"]),
+    ("v250_final_prelive_checkpoint_audit", ["audit_v250_final_prelive_checkpoint.py"]),
     ("v216_preflop_real_click_readiness_regression_bundle", ["run_v216_preflop_real_click_readiness_regression.py"]),
 ]
 
