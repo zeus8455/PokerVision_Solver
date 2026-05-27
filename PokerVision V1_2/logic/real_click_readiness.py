@@ -158,7 +158,10 @@ def validate_real_click_readiness(config: Any) -> RealClickReadinessResult:
         "action_mouse_dry_run_disabled": snap.get("V11_CLICK_DRY_RUN") is False,
         "live_no_click_mode_disabled": snap.get("V12_LIVE_DATA_CAPTURE_NO_CLICK_MODE") is False,
         "live_no_click_real_block_configured": bool(snap.get("V09_BLOCK_REAL_CLICK_WHEN_LIVE_CAPTURE_NO_CLICK")),
-        "action_button_only_mode": bool(snap.get("V10_REAL_CLICK_ALLOW_ACTION_BUTTON_ONLY")),
+        "click_scope_mode_valid": (
+            bool(snap.get("V10_REAL_CLICK_ALLOW_ACTION_BUTTON_ONLY"))
+            or not service_clicks_must_be_disabled
+        ),
         "service_clicks_disabled_for_v10": (
             not service_clicks_must_be_disabled
             or (

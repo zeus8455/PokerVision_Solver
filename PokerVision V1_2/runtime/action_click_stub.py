@@ -373,9 +373,66 @@ def build_and_maybe_execute_click_plan(
     action_button_result: Any,
     slot: Any,
     active_confirmed: bool,
+    runtime_plan_contract: Any = None,
 ) -> Dict[str, Any]:
-    """Build safe click plan from solver decision and normalized button detections."""
+    """Build safe click plan from solver decision and normalized button detections.
+
+    V2.5.4: if a saved Action_Runtime_Plan contract is provided, its planned
+    action and target sequence become the authoritative click source.
+    """
     started_at = time.perf_counter()
+
+    runtime_plan = runtime_plan_contract if isinstance(runtime_plan_contract, dict) else {}
+    runtime_plan_status = str(runtime_plan.get("status") or "").strip()
+
+    # V2.6.1: solver-source runtime decisions may not carry table metadata.
+    # The action-button guards require a real table_id, so recover it from slot.
+    effective_table_id = str(
+        solver_decision.get("table_id")
+        or getattr(slot, "table_id", None)
+        or getattr(slot, "id", None)
+        or ""
+    ).strip()
+    if effective_table_id and not solver_decision.get("table_id"):
+        solver_decision["table_id"] = effective_table_id
+    if getattr(slot, "bbox", None) is not None and not solver_decision.get("slot_bbox"):
+        solver_decision["slot_bbox"] = {
+            "x1": getattr(slot.bbox, "x1", None),
+            "y1": getattr(slot.bbox, "y1", None),
+            "x2": getattr(slot.bbox, "x2", None),
+            "y2": getattr(slot.bbox, "y2", None),
+        }
+    runtime_plan_action = str(runtime_plan.get("planned_action") or "").strip()
+    runtime_plan_target_sequence = []
+    if isinstance(runtime_plan.get("target_sequence"), list):
+        runtime_plan_target_sequence = [
+            str(x).strip()
+            for x in runtime_plan.get("target_sequence")
+            if str(x).strip()
+        ]
+
+    runtime_plan_target_sequences = []
+    if isinstance(runtime_plan.get("target_sequences"), list):
+        for seq in runtime_plan.get("target_sequences"):
+            if isinstance(seq, list):
+                clean_seq = [str(x).strip() for x in seq if str(x).strip()]
+                if clean_seq:
+                    runtime_plan_target_sequences.append(clean_seq)
+
+    runtime_plan_used = (
+        runtime_plan_status == "saved"
+        and bool(runtime_plan_action)
+        and (bool(runtime_plan_target_sequence) or bool(runtime_plan_target_sequences))
+    )
+
+    if runtime_plan_used:
+        solver_decision = dict(solver_decision)
+        solver_decision["action"] = runtime_plan_action
+        if runtime_plan.get("size_pct") is not None:
+            solver_decision["size_pct"] = runtime_plan.get("size_pct")
+        solver_decision["runtime_plan_source"] = runtime_plan.get("source")
+        solver_decision["runtime_plan_path"] = runtime_plan.get("path")
+
     decision_id = solver_decision.get("decision_id")
 
     report: Dict[str, Any] = {
@@ -395,6 +452,12 @@ def build_and_maybe_execute_click_plan(
         "processing_time_ms": 0,
         "action_button_slot_roi_guard": None,
         "controlled_live_click_gate": None,
+        "runtime_plan_used": bool(runtime_plan_used),
+        "runtime_plan_source": runtime_plan.get("source") if isinstance(runtime_plan, dict) else None,
+        "runtime_plan_status": runtime_plan_status,
+        "runtime_plan_path": runtime_plan.get("path") if isinstance(runtime_plan, dict) else None,
+        "planned_action": runtime_plan.get("planned_action") if isinstance(runtime_plan, dict) else None,
+        "target_sequence_from_runtime_plan": list(runtime_plan_target_sequence),
     }
 
     def finish(status: str, message: str) -> Dict[str, Any]:
@@ -472,6 +535,21 @@ def build_and_maybe_execute_click_plan(
     if not V11_CLICK_STUB_ENABLED:
         return finish("skipped", "V1.1 click stub is disabled by config.")
 
+    # V2.6.2 hard safety:
+    # Physical real-click is allowed only for the selected solver-source RuntimePlan.
+    # Legacy Action_Decision_JSON/check_fold may remain visible for audit/dry-run,
+    # but must never execute a mouse click.
+    runtime_plan_source = str(runtime_plan.get("source") or "").strip()
+    wants_physical_click = bool(V11_REAL_MOUSE_CLICK_ENABLED) and not bool(V11_CLICK_DRY_RUN)
+    if wants_physical_click and runtime_plan_source != "Solver_Action_Decision_Candidate_JSON":
+        return finish(
+            "blocked",
+            (
+                "Physical click blocked: selected runtime plan source is not "
+                "Solver_Action_Decision_Candidate_JSON."
+            ),
+        )
+
     if V11_CLICK_REQUIRE_ACTIVE and not active_confirmed:
         return finish("skipped", "Active is not confirmed; click skipped.")
 
@@ -491,12 +569,17 @@ def build_and_maybe_execute_click_plan(
         return finish("blocked", "No action button detections available.")
 
     try:
-        sequences = build_fallback_button_sequences(
-            solver_decision.get("action"),
-            solver_decision.get("size_pct"),
-        )
+        if runtime_plan_used and runtime_plan_target_sequence:
+            sequences = [runtime_plan_target_sequence]
+        elif runtime_plan_used and runtime_plan_target_sequences:
+            sequences = runtime_plan_target_sequences
+        else:
+            sequences = build_fallback_button_sequences(
+                solver_decision.get("action"),
+                solver_decision.get("size_pct"),
+            )
     except Exception as exc:
-        return finish("error", f"Invalid solver decision: {exc}")
+        return finish("error", f"Invalid runtime click decision: {exc}")
 
     selected_sequence = _find_first_available_sequence(sequences, best_by_class)
     if not selected_sequence:

@@ -118,6 +118,7 @@ def run_v11_stage1_runtime(
     slot: Any,
     active_confirmed: bool,
     cycle_dir: Optional[Path] = None,
+    runtime_plan_contract: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """
     Execute the safe V1.1 action-button branch.
@@ -176,7 +177,49 @@ def run_v11_stage1_runtime(
         }
 
     solver_decision = build_solver_stub_decision(solver_payload, json_path=str(solver_payload_path))
-    solver_decision = _apply_solver_timeout_fallback(solver_payload, solver_decision, full_state)
+
+    # V2.6.1: if display_analysis_cycle selected Solver_Action_Decision_Candidate_JSON
+    # as authoritative runtime source, do not execute the old v12 stub decision.
+    # The click planner consumes solver_decision, so it must mirror the selected
+    # Action_Runtime_Plan contract.
+    if (
+        isinstance(runtime_plan_contract, dict)
+        and str(runtime_plan_contract.get("source") or "") == "Solver_Action_Decision_Candidate_JSON"
+        and str(runtime_plan_contract.get("status") or "") in {"saved", "ok"}
+    ):
+        planned_action = str(runtime_plan_contract.get("planned_action") or "").strip()
+        target_sequence = runtime_plan_contract.get("target_sequence")
+        if planned_action and isinstance(target_sequence, list) and target_sequence:
+            solver_decision = {
+                "status": "ok",
+                "source": "Solver_Action_Decision_Candidate_JSON",
+                "action": planned_action,
+                "size_pct": None,
+                "size_policy": runtime_plan_contract.get("size_policy"),
+                "reason": "v261_runtime_plan_contract_selected_solver_source",
+                "solver_stub": False,
+                "decision_id": (
+                    runtime_plan_contract.get("decision_id")
+                    or f"v261_solver_runtime_{table_id}_{hand_id}_{planned_action}"
+                ),
+                "solver_fingerprint": runtime_plan_contract.get("solver_fingerprint"),
+                "target_sequence": list(target_sequence),
+                "target_button_classes": runtime_plan_contract.get("target_button_classes") or list(target_sequence),
+                "runtime_plan_source": runtime_plan_contract.get("source"),
+                "runtime_plan_path": runtime_plan_contract.get("path"),
+                "json_path": str(solver_payload_path),
+            }
+        else:
+            solver_decision["runtime_plan_override_error"] = {
+                "status": "blocked",
+                "reason": "v261_selected_solver_runtime_plan_missing_action_or_target_sequence",
+                "runtime_plan_source": runtime_plan_contract.get("source"),
+                "planned_action": runtime_plan_contract.get("planned_action"),
+                "target_sequence": runtime_plan_contract.get("target_sequence"),
+            }
+    else:
+        solver_decision = _apply_solver_timeout_fallback(solver_payload, solver_decision, full_state)
+
     solver_decision.setdefault("total_pot_bb", _extract_total_pot_bb(full_state))
     solver_decision.setdefault("waited_sec", None)
     update_table_runtime_status(
@@ -197,6 +240,7 @@ def run_v11_stage1_runtime(
         action_button_result=action_button_result,
         slot=slot,
         active_confirmed=active_confirmed,
+        runtime_plan_contract=runtime_plan_contract,
     )
 
     target_sequence = click_report.get("target_sequence") or []
@@ -222,6 +266,7 @@ def run_v11_stage1_runtime(
             "path": str(solver_payload_path),
         },
         "solver": solver_decision,
+        "runtime_plan_contract": runtime_plan_contract if isinstance(runtime_plan_contract, dict) else {},
         "action_buttons": {
             "status": action_button_result.status,
             "detected_classes": action_button_result.detected_classes,

@@ -226,6 +226,16 @@ def validate_solver_action_runtime_plan_candidate(plan: Dict[str, Any]) -> Dict[
     if plan.get("does_not_enable_real_click") is not True:
         errors.append("does_not_enable_real_click must be True.")
     if plan.get("real_click_enabled") is not False:
-        errors.append("real_click_enabled must be False for V1.5 diagnostic candidate.")
+        # V2.6.0: Solver_Action_Decision_Candidate_JSON may be promoted from
+        # diagnostic shadow plan to selected live runtime source. In that mode
+        # real_click_enabled=True is valid, but only for a non-stub solver action.
+        v260_real_click_selected_solver_source = (
+            str(plan.get("source") or "") == "Solver_Action_Decision_Candidate_JSON"
+            and plan.get("solver_stub") is False
+            and str(plan.get("status") or "") == "ok"
+            and str(plan.get("runtime_branch") or "") == "action_button"
+        )
+        if not v260_real_click_selected_solver_source:
+            errors.append("real_click_enabled must be False for V1.5 diagnostic candidate.")
 
     return {"ok": not errors, "errors": errors, "warnings": warnings}

@@ -1,28 +1,28 @@
 r"""
 display_analysis_cycle.py
 
-PokerVision Core V3.1 — live desktop analysis cycle + controlled live-click gate audit.
+PokerVision Core V3.1 РІР‚вЂќ live desktop analysis cycle + controlled live-click gate audit.
 
-Что делает каждый display-pass:
-1. При первом pass удаляет старую outputs/ui_display_cycle.
-2. Делает screenshot основного монитора.
-3. V1.2 обрабатывает реальные table_N области рабочего стола; тестовые изображения не открываются.
-4. Запускает полный detector pipeline:
+Р В§РЎвЂљР С• Р Т‘Р ВµР В»Р В°Р ВµРЎвЂљ Р С”Р В°Р В¶Р Т‘РЎвЂ№Р в„– display-pass:
+1. Р СџРЎР‚Р С‘ Р С—Р ВµРЎР‚Р Р†Р С•Р С pass РЎС“Р Т‘Р В°Р В»РЎРЏР ВµРЎвЂљ РЎРѓРЎвЂљР В°РЎР‚РЎС“РЎР‹ outputs/ui_display_cycle.
+2. Р вЂќР ВµР В»Р В°Р ВµРЎвЂљ screenshot Р С•РЎРѓР Р…Р С•Р Р†Р Р…Р С•Р С–Р С• Р СР С•Р Р…Р С‘РЎвЂљР С•РЎР‚Р В°.
+3. V1.2 Р С•Р В±РЎР‚Р В°Р В±Р В°РЎвЂљРЎвЂ№Р Р†Р В°Р ВµРЎвЂљ РЎР‚Р ВµР В°Р В»РЎРЉР Р…РЎвЂ№Р Вµ table_N Р С•Р В±Р В»Р В°РЎРѓРЎвЂљР С‘ РЎР‚Р В°Р В±Р С•РЎвЂЎР ВµР С–Р С• РЎРѓРЎвЂљР С•Р В»Р В°; РЎвЂљР ВµРЎРѓРЎвЂљР С•Р Р†РЎвЂ№Р Вµ Р С‘Р В·Р С•Р В±РЎР‚Р В°Р В¶Р ВµР Р…Р С‘РЎРЏ Р Р…Р Вµ Р С•РЎвЂљР С”РЎР‚РЎвЂ№Р Р†Р В°РЎР‹РЎвЂљРЎРѓРЎРЏ.
+4. Р вЂ”Р В°Р С—РЎС“РЎРѓР С”Р В°Р ВµРЎвЂљ Р С—Р С•Р В»Р Р…РЎвЂ№Р в„– detector pipeline:
    Trigger UI -> Table Structure -> Players -> Digit Amounts -> Card Detection.
-5. После детекций V1 HandIdentityTracker решает для каждой области table_N:
-   - новая это раздача или продолжение прошлой;
+5. Р СџР С•РЎРѓР В»Р Вµ Р Т‘Р ВµРЎвЂљР ВµР С”РЎвЂ Р С‘Р в„– V1 HandIdentityTracker РЎР‚Р ВµРЎв‚¬Р В°Р ВµРЎвЂљ Р Т‘Р В»РЎРЏ Р С”Р В°Р В¶Р Т‘Р С•Р в„– Р С•Р В±Р В»Р В°РЎРѓРЎвЂљР С‘ table_N:
+   - Р Р…Р С•Р Р†Р В°РЎРЏ РЎРЊРЎвЂљР С• РЎР‚Р В°Р В·Р Т‘Р В°РЎвЂЎР В° Р С‘Р В»Р С‘ Р С—РЎР‚Р С•Р Т‘Р С•Р В»Р В¶Р ВµР Р…Р С‘Р Вµ Р С—РЎР‚Р С•РЎв‚¬Р В»Р С•Р в„–;
    - base hand_id: hand_01, hand_02, ...;
-   - frame_name для JSON: hand_01_preflop, hand_01_flop,
-     hand_08_preflop_02 и т.д.
-6. Сохраняет clean JSON с filename == frame_name.json.
-7. V1.1 Stage 2: после сохранения JSON запускает безопасную runtime-цепочку
+   - frame_name Р Т‘Р В»РЎРЏ JSON: hand_01_preflop, hand_01_flop,
+     hand_08_preflop_02 Р С‘ РЎвЂљ.Р Т‘.
+6. Р РЋР С•РЎвЂ¦РЎР‚Р В°Р Р…РЎРЏР ВµРЎвЂљ clean JSON РЎРѓ filename == frame_name.json.
+7. V1.1 Stage 2: Р С—Р С•РЎРѓР В»Р Вµ РЎРѓР С•РЎвЂ¦РЎР‚Р В°Р Р…Р ВµР Р…Р С‘РЎРЏ JSON Р В·Р В°Р С—РЎС“РЎРѓР С”Р В°Р ВµРЎвЂљ Р В±Р ВµР В·Р С•Р С—Р В°РЎРѓР Р…РЎС“РЎР‹ runtime-РЎвЂ Р ВµР С—Р С•РЎвЂЎР С”РЎС“
    solver_payload -> solver_stub -> Action_Button_Detector -> click dry-run report.
-8. Не выполняет сверку с эталонными JSON; сохраняет только собственные результаты анализа.
+8. Р СњР Вµ Р Р†РЎвЂ№Р С—Р С•Р В»Р Р…РЎРЏР ВµРЎвЂљ РЎРѓР Р†Р ВµРЎР‚Р С”РЎС“ РЎРѓ РЎРЊРЎвЂљР В°Р В»Р С•Р Р…Р Р…РЎвЂ№Р СР С‘ JSON; РЎРѓР С•РЎвЂ¦РЎР‚Р В°Р Р…РЎРЏР ВµРЎвЂљ РЎвЂљР С•Р В»РЎРЉР С”Р С• РЎРѓР С•Р В±РЎРѓРЎвЂљР Р†Р ВµР Р…Р Р…РЎвЂ№Р Вµ РЎР‚Р ВµР В·РЎС“Р В»РЎРЉРЎвЂљР В°РЎвЂљРЎвЂ№ Р В°Р Р…Р В°Р В»Р С‘Р В·Р В°.
 
-Ключевое правило V1:
-- отсутствие strong Active = отдельный hand_N без продолжения;
-- strong Active + те же HERO cards Player_seat1 в той же table-области = та же раздача;
-- strong Active + другие HERO cards = новая раздача.
+Р С™Р В»РЎР‹РЎвЂЎР ВµР Р†Р С•Р Вµ Р С—РЎР‚Р В°Р Р†Р С‘Р В»Р С• V1:
+- Р С•РЎвЂљРЎРѓРЎС“РЎвЂљРЎРѓРЎвЂљР Р†Р С‘Р Вµ strong Active = Р С•РЎвЂљР Т‘Р ВµР В»РЎРЉР Р…РЎвЂ№Р в„– hand_N Р В±Р ВµР В· Р С—РЎР‚Р С•Р Т‘Р С•Р В»Р В¶Р ВµР Р…Р С‘РЎРЏ;
+- strong Active + РЎвЂљР Вµ Р В¶Р Вµ HERO cards Player_seat1 Р Р† РЎвЂљР С•Р в„– Р В¶Р Вµ table-Р С•Р В±Р В»Р В°РЎРѓРЎвЂљР С‘ = РЎвЂљР В° Р В¶Р Вµ РЎР‚Р В°Р В·Р Т‘Р В°РЎвЂЎР В°;
+- strong Active + Р Т‘РЎР‚РЎС“Р С–Р С‘Р Вµ HERO cards = Р Р…Р С•Р Р†Р В°РЎРЏ РЎР‚Р В°Р В·Р Т‘Р В°РЎвЂЎР В°.
 """
 
 from __future__ import annotations
@@ -290,6 +290,10 @@ class ActionEventGate:
             self._state_by_table_id[table_id] = _ActionEventTableState()
         return self._state_by_table_id[table_id]
 
+    def reset_table(self, table_id: str) -> None:
+        """Forget last Active action signature for one table."""
+        self._state_by_table_id.pop(str(table_id), None)
+
     def observe_inactive(self, table_id: str) -> None:
         state = self._state(table_id)
         state.no_active_pass_count += 1
@@ -505,7 +509,7 @@ class HandIdentityTracker:
         hero_cards_key = self._normalize_hero_cards(hero_cards)
         previous = self._active_hand_by_table_id.get(table_id)
 
-        # Без двух валидных HERO cards нельзя надёжно доказать continuation.
+        # Р вЂР ВµР В· Р Т‘Р Р†РЎС“РЎвЂ¦ Р Р†Р В°Р В»Р С‘Р Т‘Р Р…РЎвЂ№РЎвЂ¦ HERO cards Р Р…Р ВµР В»РЎРЉР В·РЎРЏ Р Р…Р В°Р Т‘РЎвЂР В¶Р Р…Р С• Р Т‘Р С•Р С”Р В°Р В·Р В°РЎвЂљРЎРЉ continuation.
         # V0.8: missing HERO on a single Active frame must not erase the last
         # known hand; the frame itself remains invalid for Clear_JSON, but a
         # future frame may still prove continuation by HERO + board.
@@ -1452,10 +1456,57 @@ def build_runtime_plan_source_selection_contract(
             }
 
         if runtime_candidate_plan.get("real_click_enabled") is not False:
+            real_click_flags = (
+                guard.get("real_click_flags")
+                if isinstance(guard.get("real_click_flags"), dict)
+                else {}
+            )
+            v263_real_click_solver_source_allowed = (
+                bool(guard.get("allowed"))
+                and str(guard.get("source") or "") == V16_SOLVER_CANDIDATE_RUNTIME_SOURCE_LABEL
+                and str(solver_candidate_state.get("status") or "") == "ok"
+                and solver_candidate_state.get("solver_stub") is False
+                and str(runtime_candidate_plan.get("status") or "") == "ok"
+                and str(runtime_candidate_plan.get("source") or "") == V16_SOLVER_CANDIDATE_RUNTIME_SOURCE_LABEL
+                and bool(real_click_flags.get("V11_REAL_MOUSE_CLICK_ENABLED"))
+                and not bool(real_click_flags.get("V11_CLICK_DRY_RUN"))
+                and not bool(real_click_flags.get("V11_TRIGGER_UI_SERVICE_REAL_CLICK_ENABLED"))
+                and bool(real_click_flags.get("V16_SOLVER_CANDIDATE_RUNTIME_ALLOW_REAL_CLICK"))
+                and not bool(real_click_flags.get("V16_SOLVER_CANDIDATE_RUNTIME_DRY_RUN_ONLY"))
+            )
+            if not v263_real_click_solver_source_allowed:
+                return {
+                    "selected_source": "Action_Decision_JSON",
+                    "reason": "solver_candidate_runtime_plan_real_click_not_false",
+                    "guard": guard,
+                    "action_decision_state": action_decision_state,
+                    "solver_candidate_state": solver_candidate_state,
+                    "v263_real_click_solver_source_allowed": v263_real_click_solver_source_allowed,
+                }
+
+        # V2.6.4: authoritative real-click solver-source selection.
+        # The old v2/v21/v22 gates were built as dry-run diagnostics and can reject
+        # a valid real-click runtime candidate. If the solver candidate is non-stub,
+        # the runtime candidate is valid, and the source guard explicitly allowed it,
+        # select Solver_Action_Decision_Candidate_JSON before those legacy gates.
+        if (
+            bool(guard.get("allowed"))
+            and str(guard.get("source") or "") == V16_SOLVER_CANDIDATE_RUNTIME_SOURCE_LABEL
+            and isinstance(solver_candidate_state, dict)
+            and str(solver_candidate_state.get("status") or "") == "ok"
+            and solver_candidate_state.get("solver_stub") is False
+            and isinstance(runtime_candidate_plan, dict)
+            and str(runtime_candidate_plan.get("status") or "") == "ok"
+            and str(runtime_candidate_plan.get("source") or "") == V16_SOLVER_CANDIDATE_RUNTIME_SOURCE_LABEL
+            and isinstance(runtime_candidate_validation, dict)
+            and bool(runtime_candidate_validation.get("ok"))
+        ):
             return {
-                "selected_source": "Action_Decision_JSON",
-                "reason": "solver_candidate_runtime_plan_real_click_not_false",
+                "selected_source": V16_SOLVER_CANDIDATE_RUNTIME_SOURCE_LABEL,
+                "reason": "v264_solver_candidate_selected_before_legacy_dryrun_gates",
                 "guard": guard,
+                "runtime_candidate_plan": runtime_candidate_plan,
+                "runtime_candidate_validation": runtime_candidate_validation,
                 "action_decision_state": action_decision_state,
                 "solver_candidate_state": solver_candidate_state,
             }
@@ -1825,17 +1876,23 @@ def build_and_save_solver_action_decision_candidate_contract(
 
 
 def build_solver_candidate_runtime_source_guard() -> Dict[str, object]:
-    """Return V1.6 controlled-switch guard for using solver candidate as runtime source."""
+    """
+    Return V1.6/V2.6 controlled-switch guard for using solver candidate as runtime source.
+
+    V2.6.0 update:
+    - old behaviour allowed Solver_Action_Decision_Candidate_JSON only in dry-run-only mode;
+    - full live-click mode is now valid when V16_SOLVER_CANDIDATE_RUNTIME_ALLOW_REAL_CLICK=True
+      and the global real-click flags are deliberately armed.
+    """
     real_click_flags = {
         "V11_CLICK_DRY_RUN": bool(V11_CLICK_DRY_RUN),
         "V11_REAL_MOUSE_CLICK_ENABLED": bool(V11_REAL_MOUSE_CLICK_ENABLED),
         "V11_TRIGGER_UI_SERVICE_REAL_CLICK_ENABLED": bool(V11_TRIGGER_UI_SERVICE_REAL_CLICK_ENABLED),
+        "V16_SOLVER_CANDIDATE_RUNTIME_DRY_RUN_ONLY": bool(V16_SOLVER_CANDIDATE_RUNTIME_DRY_RUN_ONLY),
         "V16_SOLVER_CANDIDATE_RUNTIME_ALLOW_REAL_CLICK": bool(V16_SOLVER_CANDIDATE_RUNTIME_ALLOW_REAL_CLICK),
     }
 
-    enabled = bool(V16_USE_SOLVER_CANDIDATE_AS_RUNTIME_SOURCE)
-
-    if not enabled:
+    if not bool(V16_USE_SOLVER_CANDIDATE_AS_RUNTIME_SOURCE):
         return {
             "enabled": False,
             "allowed": False,
@@ -1844,50 +1901,49 @@ def build_solver_candidate_runtime_source_guard() -> Dict[str, object]:
             "real_click_flags": real_click_flags,
         }
 
-    if not bool(V16_SOLVER_CANDIDATE_RUNTIME_DRY_RUN_ONLY):
+    # Legacy safe path: solver candidate may replace Action_Decision_JSON only for dry-run.
+    if bool(V16_SOLVER_CANDIDATE_RUNTIME_DRY_RUN_ONLY):
+        if bool(V11_CLICK_DRY_RUN) and not bool(V11_REAL_MOUSE_CLICK_ENABLED):
+            return {
+                "enabled": True,
+                "allowed": True,
+                "source": V16_SOLVER_CANDIDATE_RUNTIME_SOURCE_LABEL,
+                "reason": "v16_allowed_dry_run_only",
+                "real_click_flags": real_click_flags,
+            }
         return {
             "enabled": True,
             "allowed": False,
             "source": V16_SOLVER_CANDIDATE_RUNTIME_SOURCE_LABEL,
-            "reason": "v16_dry_run_only_guard_disabled",
+            "reason": "v16_blocked_because_dry_run_only_but_real_click_flag_is_enabled",
             "real_click_flags": real_click_flags,
         }
 
+    # New full live-click path: solver candidate may become authoritative runtime source.
     if bool(V16_SOLVER_CANDIDATE_RUNTIME_ALLOW_REAL_CLICK):
+        if (not bool(V11_CLICK_DRY_RUN)) and bool(V11_REAL_MOUSE_CLICK_ENABLED):
+            return {
+                "enabled": True,
+                "allowed": True,
+                "source": V16_SOLVER_CANDIDATE_RUNTIME_SOURCE_LABEL,
+                "reason": "v26_allowed_real_click_solver_candidate_source",
+                "real_click_flags": real_click_flags,
+            }
         return {
             "enabled": True,
             "allowed": False,
             "source": V16_SOLVER_CANDIDATE_RUNTIME_SOURCE_LABEL,
-            "reason": "v16_real_click_not_allowed_for_candidate_source",
-            "real_click_flags": real_click_flags,
-        }
-
-    if not bool(V11_CLICK_DRY_RUN):
-        return {
-            "enabled": True,
-            "allowed": False,
-            "source": V16_SOLVER_CANDIDATE_RUNTIME_SOURCE_LABEL,
-            "reason": "v16_blocked_because_click_dry_run_is_false",
-            "real_click_flags": real_click_flags,
-        }
-
-    if bool(V11_REAL_MOUSE_CLICK_ENABLED) or bool(V11_TRIGGER_UI_SERVICE_REAL_CLICK_ENABLED):
-        return {
-            "enabled": True,
-            "allowed": False,
-            "source": V16_SOLVER_CANDIDATE_RUNTIME_SOURCE_LABEL,
-            "reason": "v16_blocked_because_real_click_flag_is_enabled",
+            "reason": "v26_blocked_real_click_source_flags_not_armed",
             "real_click_flags": real_click_flags,
         }
 
     return {
         "enabled": True,
-        "allowed": True,
+        "allowed": False,
         "source": V16_SOLVER_CANDIDATE_RUNTIME_SOURCE_LABEL,
-        "reason": "v16_allowed_dry_run_only",
+        "reason": "v16_solver_candidate_runtime_source_not_allowed_by_config",
         "real_click_flags": real_click_flags,
     }
-
 
 def build_and_save_solver_action_runtime_plan_candidate_contract(
     *,
@@ -2289,7 +2345,7 @@ def save_dark_and_clear_table_frame_json(
                             "publication_stage": "final" if decision.should_save else "pending_only",
                             "state_machine": decision.to_json(),
                         })
-    
+
                         if decision.should_save and clear_state_to_save is not None:
                             final_clear_state = dict(clear_state_to_save)
                             if click_result is not None:
@@ -2515,15 +2571,31 @@ def save_dark_and_clear_table_frame_json(
     try:
         contract = state.get("clear_json_contract") if isinstance(state.get("clear_json_contract"), dict) else {}
         action_decision_contract = contract.get("action_decision_contract") if isinstance(contract.get("action_decision_contract"), dict) else {}
-        runtime_plan_contract = action_decision_contract.get("action_runtime_plan_contract") if isinstance(action_decision_contract.get("action_runtime_plan_contract"), dict) else {}
+        legacy_runtime_plan_contract = action_decision_contract.get("action_runtime_plan_contract") if isinstance(action_decision_contract.get("action_runtime_plan_contract"), dict) else {}
+
+        # V2.6.1: expose the actually selected pre-runtime contract if present.
+        # Otherwise Dark_JSON/runtime_action lies: click planner may execute solver-source
+        # while top-level audit still says Action_Decision_JSON/check_fold.
+        selected_runtime_plan_contract = (
+            state.get("v254_pre_runtime_action_runtime_plan_contract")
+            if isinstance(state.get("v254_pre_runtime_action_runtime_plan_contract"), dict)
+            else {}
+        )
+        runtime_plan_contract = selected_runtime_plan_contract or legacy_runtime_plan_contract
+
         if runtime_plan_contract:
             runtime_action_block = state.get("runtime_action")
             if isinstance(runtime_action_block, dict):
-                runtime_action_block["source"] = "Action_Decision_JSON"
+                runtime_action_block["source"] = str(runtime_plan_contract.get("source") or "Action_Decision_JSON")
                 runtime_action_block["action_runtime_plan_contract"] = runtime_plan_contract
                 runtime_action_block["planned_action"] = runtime_plan_contract.get("planned_action")
                 runtime_action_block["target_sequence_from_action_decision"] = runtime_plan_contract.get("target_sequence")
                 runtime_action_block["target_sequences_from_action_decision"] = runtime_plan_contract.get("target_sequences")
+                runtime_action_block["runtime_plan_audit_source"] = (
+                    "v254_pre_runtime_action_runtime_plan_contract"
+                    if selected_runtime_plan_contract
+                    else "clear_json_contract.action_decision_contract.action_runtime_plan_contract"
+                )
     except Exception as exc:
         add_warning(state, block="action_runtime_plan_contract", message=f"Failed to attach runtime plan audit: {exc}")
 
@@ -2889,6 +2961,157 @@ def _run_v11_stage25_service_runtime_safely(
         }
 
 
+def _build_v254_pre_runtime_plan_contract(
+    *,
+    state: Dict[str, object],
+    table_id: str,
+    cycle_dir: Path,
+) -> Dict[str, object]:
+    """
+    V2.5.4/V2.6.0 pre-runtime selected Action_Runtime_Plan builder.
+
+    Required chain:
+    Dark_JSON state
+    -> Clear_JSON candidate
+    -> attach Engine_Reference preflop solver preview
+    -> Solver_Action_Decision_Candidate
+    -> selected Action_Runtime_Plan
+    -> V11 Action_Button runtime executes exactly this plan when selected.
+    """
+    try:
+        clear_state_candidate = build_clear_json_from_dark_state(state)
+
+        # Critical V2.6.0 bridge:
+        # Solver_Action_Decision_Candidate requires Clear_JSON.engine_decision_preview.
+        clear_state_candidate = _attach_preflop_solver_preview_to_clear_state(clear_state_candidate)
+
+        clear_validation = validate_clear_json_contract(clear_state_candidate)
+        if not clear_validation.get("ok"):
+            return {
+                "enabled": bool(V07_ACTION_RUNTIME_PLAN_ENABLED),
+                "source": "Action_Decision_JSON",
+                "status": "not_built",
+                "reason": "v260_pre_runtime_clear_json_validation_failed",
+                "validation": clear_validation,
+                "path": None,
+                "dir": V07_ACTION_RUNTIME_PLAN_DIR_NAME,
+            }
+
+        decision_state = build_decision_json_from_clear_state(clear_state_candidate)
+        decision_validation = validate_decision_json_contract(decision_state)
+        if not decision_validation.get("ok"):
+            return {
+                "enabled": bool(V07_ACTION_RUNTIME_PLAN_ENABLED),
+                "source": "Action_Decision_JSON",
+                "status": "not_built",
+                "reason": "v260_pre_runtime_decision_json_validation_failed",
+                "validation": decision_validation,
+                "path": None,
+                "dir": V07_ACTION_RUNTIME_PLAN_DIR_NAME,
+                "engine_preview_attached": isinstance(clear_state_candidate.get("engine_decision_preview"), dict),
+                "engine_context_attached": isinstance(clear_state_candidate.get("engine_context"), dict),
+            }
+
+        action_decision_state = build_action_decision_from_decision_json(decision_state)
+        action_decision_validation = validate_action_decision_contract(action_decision_state)
+        if not action_decision_validation.get("ok"):
+            return {
+                "enabled": bool(V07_ACTION_RUNTIME_PLAN_ENABLED),
+                "source": "Action_Decision_JSON",
+                "status": "not_built",
+                "reason": "v260_pre_runtime_action_decision_validation_failed",
+                "validation": action_decision_validation,
+                "path": None,
+                "dir": V07_ACTION_RUNTIME_PLAN_DIR_NAME,
+                "engine_preview_attached": isinstance(clear_state_candidate.get("engine_decision_preview"), dict),
+                "engine_context_attached": isinstance(clear_state_candidate.get("engine_context"), dict),
+            }
+
+        solver_candidate_contract = build_and_save_solver_action_decision_candidate_contract(
+            clear_state=clear_state_candidate,
+            cycle_dir=cycle_dir,
+            table_id=table_id,
+        )
+
+        solver_candidate_state = (
+            solver_candidate_contract.get("candidate_state")
+            if isinstance(solver_candidate_contract, dict)
+            else None
+        )
+
+        runtime_plan_contract = build_and_save_action_runtime_plan_contract(
+            action_decision_state=action_decision_state,
+            cycle_dir=cycle_dir,
+            table_id=table_id,
+            solver_candidate_state=solver_candidate_state if isinstance(solver_candidate_state, dict) else None,
+        )
+
+        # V2.6.1 hard safety:
+        # If Engine_Reference/Solver candidate exists and is non-stub, the runtime must
+        # not silently fall back to Action_Decision_JSON stub. This prevents real-click
+        # from clicking Check/check_fold when solver selected fold/call/raise.
+        if (
+            isinstance(solver_candidate_state, dict)
+            and str(solver_candidate_state.get("status") or "") == "ok"
+            and solver_candidate_state.get("solver_stub") is False
+            and runtime_plan_contract.get("source") != V16_SOLVER_CANDIDATE_RUNTIME_SOURCE_LABEL
+        ):
+            runtime_plan_contract["status"] = "blocked"
+            runtime_plan_contract["reason"] = "v261_blocked_stub_runtime_fallback_when_solver_candidate_available"
+            runtime_plan_contract["blocked_reason"] = "solver_candidate_available_but_runtime_source_fell_back_to_action_decision_json"
+            runtime_plan_contract["unsafe_fallback_block"] = {
+                "schema_version": "v261_solver_source_fallback_safety_block",
+                "status": "BLOCKED",
+                "reason": "solver_candidate_available_but_runtime_source_fell_back_to_action_decision_json",
+                "solver_candidate_action": solver_candidate_state.get("action"),
+                "solver_candidate_target_button_classes": solver_candidate_state.get("target_button_classes"),
+                "selected_runtime_source": runtime_plan_contract.get("source"),
+                "selected_runtime_action": runtime_plan_contract.get("planned_action"),
+                "selected_runtime_target_sequence": runtime_plan_contract.get("target_sequence"),
+                "message": (
+                    "Runtime fallback to Action_Decision_JSON stub was blocked because a valid "
+                    "non-stub solver candidate exists. Fix source selection before real-click."
+                ),
+            }
+
+        runtime_plan_contract["v260_pre_runtime_plan_contract"] = {
+            "status": "built",
+            "source": "pre_action_button_runtime",
+            "engine_preview_attached": isinstance(clear_state_candidate.get("engine_decision_preview"), dict),
+            "engine_context_attached": isinstance(clear_state_candidate.get("engine_context"), dict),
+            "engine_action": (
+                clear_state_candidate.get("engine_decision_preview", {}).get("engine_action")
+                if isinstance(clear_state_candidate.get("engine_decision_preview"), dict)
+                else None
+            ),
+            "solver_candidate_status": (
+                solver_candidate_contract.get("status")
+                if isinstance(solver_candidate_contract, dict)
+                else None
+            ),
+            "solver_candidate_action": (
+                solver_candidate_state.get("action")
+                if isinstance(solver_candidate_state, dict)
+                else None
+            ),
+            "selected_runtime_source": runtime_plan_contract.get("source"),
+            "selected_planned_action": runtime_plan_contract.get("planned_action"),
+            "selected_target_sequence": runtime_plan_contract.get("target_sequence"),
+        }
+
+        return runtime_plan_contract
+
+    except Exception as exc:
+        return {
+            "enabled": bool(V07_ACTION_RUNTIME_PLAN_ENABLED),
+            "source": "Action_Decision_JSON",
+            "status": "error",
+            "reason": "v260_pre_runtime_plan_build_error",
+            "message": str(exc),
+            "path": None,
+            "dir": V07_ACTION_RUNTIME_PLAN_DIR_NAME,
+        }
+
 def _run_v11_stage2_runtime_safely(
     *,
     state: Dict[str, object],
@@ -2897,6 +3120,7 @@ def _run_v11_stage2_runtime_safely(
     active_confirmed: bool,
     cycle_dir: Path,
     identity: Optional[FrameIdentity] = None,
+    runtime_plan_contract: Optional[Dict[str, object]] = None,
 ) -> Dict[str, object]:
     """
     Run the safe V1.1 action-button chain and return its in-memory report.
@@ -2921,6 +3145,7 @@ def _run_v11_stage2_runtime_safely(
             slot=slot,
             active_confirmed=active_confirmed,
             cycle_dir=cycle_dir,
+            runtime_plan_contract=runtime_plan_contract,
         )
         return report if isinstance(report, dict) else {}
     except Exception as exc:
@@ -2946,10 +3171,10 @@ def run_ui_display_analysis_cycle(
     cycle_id: str | None = None,
 ) -> List[Path]:
     """
-    Запустить V1 runtime-анализ текущего display-pass.
+    Р вЂ”Р В°Р С—РЎС“РЎРѓРЎвЂљР С‘РЎвЂљРЎРЉ V1 runtime-Р В°Р Р…Р В°Р В»Р С‘Р В· РЎвЂљР ВµР С”РЎС“РЎвЂ°Р ВµР С–Р С• display-pass.
 
-    В одном pass у разных table_N могут быть разные hand_id/frame_name.
-    display_pass_id используется только для debug-папок и не попадает в clean JSON.
+    Р вЂ™ Р С•Р Т‘Р Р…Р С•Р С pass РЎС“ РЎР‚Р В°Р В·Р Р…РЎвЂ№РЎвЂ¦ table_N Р СР С•Р С–РЎС“РЎвЂљ Р В±РЎвЂ№РЎвЂљРЎРЉ РЎР‚Р В°Р В·Р Р…РЎвЂ№Р Вµ hand_id/frame_name.
+    display_pass_id Р С‘РЎРѓР С—Р С•Р В»РЎРЉР В·РЎС“Р ВµРЎвЂљРЎРѓРЎРЏ РЎвЂљР С•Р В»РЎРЉР С”Р С• Р Т‘Р В»РЎРЏ debug-Р С—Р В°Р С—Р С•Р С” Р С‘ Р Р…Р Вµ Р С—Р С•Р С—Р В°Р Т‘Р В°Р ВµРЎвЂљ Р Р† clean JSON.
     """
     started_at = now_perf_counter()
 
@@ -3122,22 +3347,33 @@ def run_ui_display_analysis_cycle(
             and trigger_result.table_status_hint == TABLE_STATUS_READY_FOR_STRUCTURE_PIPELINE
         )
         if early_lifecycle_active and table_action_transaction_gate is not None:
-            early_action_transaction_decision = table_action_transaction_gate.begin_analysis_cycle(
-                table_id=slot.table_id,
-                action_event_id=None,
-                action_signature=None,
-            )
-            early_lifecycle_gate_audit = _build_table_lifecycle_gate_audit(
-                early_action_transaction_decision,
-                stage="before_heavy_analysis",
-            )
-            if not early_action_transaction_decision.should_process:
-                print(
-                    f"[TableActionTransactionGate][{slot.table_id}] heavy analysis skipped by early lifecycle gate: "
-                    f"reason={early_action_transaction_decision.reason}, "
-                    f"locked_by={early_action_transaction_decision.locked_by_transaction_id}"
-                )
-                continue
+            # V2.6.0: audit-only before heavy analysis.
+            # Do NOT open TableActionTransactionGate here because ActionEventGate has not
+            # produced a new strong action_event_id/action_signature yet. Opening a table
+            # lifecycle with action_event_id=None causes Stage2 to skip forever and forces
+            # repeated stale lifecycle release loops.
+            early_lifecycle_gate_audit = {
+                "gate_version": "v26_table_lifecycle_deferred_until_action_event",
+                "schema_version": "table_lifecycle_gate_v2_6",
+                "should_process": True,
+                "status": "deferred",
+                "reason": "v260_deferred_until_action_event_gate",
+                "table_id": slot.table_id,
+                "transaction_id": None,
+                "action_event_id": None,
+                "phase": "pre_action_event_audit_only",
+                "locked_by_transaction_id": None,
+                "previous_action_event_id": None,
+                "lifecycle_stage": "analysis_cycle",
+                "heavy_analysis_allowed": True,
+                "heavy_analysis_blocked": False,
+                "blocked_reason": None,
+                "stage": "before_heavy_analysis",
+                "message": (
+                    "Heavy analysis is allowed. TableActionTransactionGate will open only after "
+                    "ActionEventGate confirms a new strong Active action_event."
+                ),
+            }
 
         if TABLE_STRUCTURE_ENABLED:
             structure_allowed = True
@@ -3362,6 +3598,31 @@ def run_ui_display_analysis_cycle(
                         f"analysis preserved: reason={action_event_decision.reason}, "
                         f"duplicate_of={action_event_decision.duplicate_of}"
                     )
+
+                    # V2.6.0: if early table lifecycle was opened before ActionEventGate
+                    # confirmed a new strong Active event, release it immediately.
+                    # Otherwise Stage2 cannot build solver payload/runtime and the table
+                    # loops forever as table_lifecycle_already_open_before_analysis.
+                    if (
+                        table_action_transaction_gate is not None
+                        and action_transaction_decision is not None
+                        and bool(getattr(action_transaction_decision, "should_process", False))
+                    ):
+                        duplicate_release_report = table_action_transaction_gate.abort_analysis_cycle(
+                            table_id=slot.table_id,
+                            reason="v260_duplicate_active_released_early_lifecycle",
+                            message=(
+                                "Released early lifecycle because ActionEventGate suppressed this "
+                                "Active frame as duplicate/no-new-strong-action-event."
+                            ),
+                        )
+                        print(
+                            f"[TableActionTransactionGate][{slot.table_id}] duplicate Active early lifecycle released: "
+                            f"status={duplicate_release_report.get('status')}, "
+                            f"reason={duplicate_release_report.get('reason')}"
+                        )
+                        action_transaction_decision = None
+
             else:
                 action_event_gate.observe_inactive(slot.table_id)
                 if table_action_transaction_gate is not None:
@@ -3482,7 +3743,15 @@ def run_ui_display_analysis_cycle(
                 )
                 action_runtime_allowed = False
 
+        pre_runtime_plan_contract: Optional[Dict[str, object]] = None
         if action_runtime_allowed:
+            pre_runtime_plan_contract = _build_v254_pre_runtime_plan_contract(
+                state=state,
+                table_id=slot.table_id,
+                cycle_dir=cycle_dir,
+            )
+            state["v254_pre_runtime_action_runtime_plan_contract"] = pre_runtime_plan_contract
+
             action_report = _run_v11_stage2_runtime_safely(
                 state=state,
                 table_roi=table_roi,
@@ -3490,6 +3759,7 @@ def run_ui_display_analysis_cycle(
                 active_confirmed=active_confirmed,
                 cycle_dir=cycle_dir,
                 identity=identity,
+                runtime_plan_contract=pre_runtime_plan_contract,
             )
         else:
             if not action_runtime_candidate:
