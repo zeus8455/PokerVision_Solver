@@ -1484,6 +1484,22 @@ def build_runtime_plan_source_selection_contract(
             if isinstance(solver_decision_context, dict):
                 runtime_candidate_plan["decision_context"] = dict(solver_decision_context)
 
+        if isinstance(runtime_candidate_plan, dict):
+            for key in (
+                "diagnostic_only",
+                "allowed_kind",
+                "v21_preflight",
+                "v21_preflop_real_click_preflight_gate",
+            ):
+                if key not in runtime_candidate_plan and key in solver_candidate_state:
+                    value = solver_candidate_state.get(key)
+                    runtime_candidate_plan[key] = dict(value) if isinstance(value, dict) else value
+
+            if "v21_preflight" not in runtime_candidate_plan:
+                legacy_v21 = runtime_candidate_plan.get("v21_preflop_real_click_preflight_gate")
+                if isinstance(legacy_v21, dict):
+                    runtime_candidate_plan["v21_preflight"] = dict(legacy_v21)
+
         v21_preflop_real_click_preflight_gate = build_v21_preflop_real_click_preflight_gate(
             runtime_candidate_plan
         )
