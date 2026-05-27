@@ -154,6 +154,10 @@ from logic.v21_preflop_real_click_preflight_gate import (
     build_v21_preflop_real_click_preflight_gate,
     validate_v21_preflop_real_click_preflight_gate_report,
 )
+from logic.v22_preflop_controlled_real_click_arming_gate import (
+    build_v22_preflop_controlled_real_click_arming_gate,
+    validate_v22_preflop_controlled_real_click_arming_gate_report,
+)
 from logic.table_action_transaction_gate import TableActionTransactionGate
 from pipeline.card_detection_pipeline import run_card_detection_pipeline
 from pipeline.digit_amounts_pipeline import run_digit_amounts_pipeline
@@ -1487,6 +1491,19 @@ def build_runtime_plan_source_selection_contract(
             v21_preflop_real_click_preflight_gate
         )
 
+        v22_controlled_real_click_arming_gate = build_v22_preflop_controlled_real_click_arming_gate(
+            runtime_candidate_plan,
+            allowed_table_ids=[],
+            slot_bbox_guard_ok=True,
+            no_repeat_guard_ok=True,
+            button_availability_guard_ok=True,
+            export_validator_ok=True,
+            explicit_controlled_real_click_token=False,
+        )
+        v22_controlled_real_click_arming_gate_validation = validate_v22_preflop_controlled_real_click_arming_gate_report(
+            v22_controlled_real_click_arming_gate
+        )
+
         return {
             "selected_source": "Solver_Action_Decision_Candidate_JSON",
             "reason": "v17_1_solver_candidate_selected_dry_run_only",
@@ -1495,6 +1512,8 @@ def build_runtime_plan_source_selection_contract(
             "v2_preflop_live_gate_validation": v2_preflop_live_gate_validation,
             "v21_preflop_real_click_preflight_gate": v21_preflop_real_click_preflight_gate,
             "v21_preflop_real_click_preflight_gate_validation": v21_preflop_real_click_preflight_gate_validation,
+            "v22_controlled_real_click_arming_gate": v22_controlled_real_click_arming_gate,
+            "v22_controlled_real_click_arming_gate_validation": v22_controlled_real_click_arming_gate_validation,
             "runtime_candidate_plan": runtime_candidate_plan,
             "runtime_candidate_validation": runtime_candidate_validation,
             "action_decision_state": action_decision_state,
@@ -1546,6 +1565,14 @@ def build_and_save_action_runtime_plan_contract(
             v21_preflight_validation = source_selection.get("v21_preflop_real_click_preflight_gate_validation")
             if isinstance(v21_preflight_validation, dict):
                 runtime_plan_state["v21_preflop_real_click_preflight_gate_validation"] = dict(v21_preflight_validation)
+
+            v22_arming = source_selection.get("v22_controlled_real_click_arming_gate")
+            if isinstance(v22_arming, dict):
+                runtime_plan_state["v22_controlled_real_click_arming_gate"] = dict(v22_arming)
+
+            v22_arming_validation = source_selection.get("v22_controlled_real_click_arming_gate_validation")
+            if isinstance(v22_arming_validation, dict):
+                runtime_plan_state["v22_controlled_real_click_arming_gate_validation"] = dict(v22_arming_validation)
 
             validation = validate_solver_action_runtime_plan_candidate(runtime_plan_state)
         else:
