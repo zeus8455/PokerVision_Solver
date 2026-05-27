@@ -30,6 +30,7 @@ CHECKS = [
     ("v215_v223_strict_candidate_export_validator", ["audit_v215_preflop_real_click_candidate_export_validator.py"]),
     ("v221_preflop_arming_gate_export_audit", ["audit_v221_preflop_arming_gate_export_audit.py"]),
     ("v225_preflop_arming_runtime_output_audit", ["audit_v225_preflop_arming_runtime_output.py"]),
+    ("v230_preflop_only_postflop_hard_block_unit", ["test_v230_preflop_only_postflop_hard_block_unit.py"]),
     ("v216_preflop_real_click_readiness_regression_bundle", ["run_v216_preflop_real_click_readiness_regression.py"]),
 ]
 
