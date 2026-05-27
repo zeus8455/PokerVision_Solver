@@ -34,6 +34,7 @@ CHECKS = [
     ("v232_runtime_postflop_never_arms_audit", ["audit_v232_runtime_postflop_never_arms.py"]),
     ("v234_preflop_controlled_arming_dryrun_contract_unit", ["test_v234_preflop_controlled_arming_dryrun_contract_unit.py"]),
     ("v236_preflop_arming_runtime_diagnostic_activation_audit", ["audit_v236_preflop_arming_runtime_diagnostic_activation.py"]),
+    ("v238_config_driven_arming_activation_audit", ["audit_v238_config_driven_arming_activation.py"]),
     ("v216_preflop_real_click_readiness_regression_bundle", ["run_v216_preflop_real_click_readiness_regression.py"]),
 ]
 
