@@ -1491,14 +1491,22 @@ def build_runtime_plan_source_selection_contract(
             v21_preflop_real_click_preflight_gate
         )
 
+        v22_allowed_table_ids = globals().get("V22_CONTROLLED_PREFLOP_REAL_CLICK_ALLOWED_TABLE_IDS", [])
+        if not isinstance(v22_allowed_table_ids, list):
+            v22_allowed_table_ids = []
+
         v22_controlled_real_click_arming_gate = build_v22_preflop_controlled_real_click_arming_gate(
             runtime_candidate_plan,
-            allowed_table_ids=[],
-            slot_bbox_guard_ok=True,
-            no_repeat_guard_ok=True,
-            button_availability_guard_ok=True,
-            export_validator_ok=True,
-            explicit_controlled_real_click_token=False,
+            allowed_table_ids=v22_allowed_table_ids,
+            slot_bbox_guard_ok=bool(globals().get("V22_CONTROLLED_PREFLOP_REAL_CLICK_REQUIRE_SLOT_GUARD", True)),
+            no_repeat_guard_ok=bool(globals().get("V22_CONTROLLED_PREFLOP_REAL_CLICK_REQUIRE_NO_REPEAT_GUARD", True)),
+            button_availability_guard_ok=bool(globals().get("V22_CONTROLLED_PREFLOP_REAL_CLICK_REQUIRE_BUTTON_AVAILABILITY", True)),
+            export_validator_ok=bool(globals().get("V22_CONTROLLED_PREFLOP_REAL_CLICK_REQUIRE_EXPORT_VALIDATOR", True)),
+            explicit_controlled_real_click_token=(
+                bool(globals().get("V22_CONTROLLED_PREFLOP_REAL_CLICK_ARMING_ENABLED", False))
+                and bool(globals().get("V22_CONTROLLED_PREFLOP_REAL_CLICK_EXPLICIT_TOKEN", False))
+                and bool(globals().get("V22_CONTROLLED_PREFLOP_REAL_CLICK_ALLOW_REAL_CLICK", False))
+            ),
         )
         v22_controlled_real_click_arming_gate_validation = validate_v22_preflop_controlled_real_click_arming_gate_report(
             v22_controlled_real_click_arming_gate
