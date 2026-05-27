@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 """
 audit_v215_preflop_real_click_candidate_export_validator.py
@@ -95,6 +95,24 @@ def validate_export(path: Path = DEFAULT_EXPORT_PATH) -> Dict[str, Any]:
         allowed_kind = item.get("allowed_kind")
         target_sequence = item.get("target_sequence") if isinstance(item.get("target_sequence"), list) else []
         v21 = item.get("v21_preflight") if isinstance(item.get("v21_preflight"), dict) else {}
+
+        table_id = str(item.get("table_id") or "")
+        decision_context = item.get("decision_context") if isinstance(item.get("decision_context"), dict) else {}
+        decision_context_table_id = str(decision_context.get("table_id") or "")
+
+        if not table_id:
+            errors.append({"index": idx, "reason": "candidate_table_id_missing"})
+
+        if not decision_context_table_id:
+            errors.append({"index": idx, "reason": "candidate_decision_context_table_id_missing"})
+
+        if table_id and decision_context_table_id and table_id != decision_context_table_id:
+            errors.append({
+                "index": idx,
+                "reason": "candidate_table_id_mismatch",
+                "table_id": table_id,
+                "decision_context_table_id": decision_context_table_id,
+            })
 
         action_counter[action] += 1
         allowed_kind_counter[allowed_kind] += 1
