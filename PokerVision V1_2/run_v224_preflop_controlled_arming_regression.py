@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 """
 run_v224_preflop_controlled_arming_regression.py
@@ -29,6 +29,7 @@ CHECKS = [
     ("v214_preflop_real_click_candidate_export", ["export_v214_preflop_real_click_candidates.py"]),
     ("v215_v223_strict_candidate_export_validator", ["audit_v215_preflop_real_click_candidate_export_validator.py"]),
     ("v221_preflop_arming_gate_export_audit", ["audit_v221_preflop_arming_gate_export_audit.py"]),
+    ("v225_preflop_arming_runtime_output_audit", ["audit_v225_preflop_arming_runtime_output.py"]),
     ("v216_preflop_real_click_readiness_regression_bundle", ["run_v216_preflop_real_click_readiness_regression.py"]),
 ]
 
