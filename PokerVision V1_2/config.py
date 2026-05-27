@@ -1,4 +1,4 @@
-﻿r"""
+r"""
 config.py
 
 PokerVision Core V1.2 / V0.9 вЂ” live desktop runtime configuration.
@@ -947,3 +947,23 @@ if V87_FULL_LIVE_CHAIN_SCOPE_ACTIVE:
     V11_TRIGGER_UI_SERVICE_DRY_RUN = False
     V31_CONTROLLED_LIVE_CLICK_SERVICE_BRANCH_DISABLED = False
     V31_CONTROLLED_LIVE_CLICK_MAX_CLICKS_PER_RUN = 0
+
+# =============================================================================
+# V2.2.7 — Controlled preflop real-click arming config
+# =============================================================================
+# Default-safe: these flags must not enable real-click by default.
+V22_CONTROLLED_PREFLOP_REAL_CLICK_ARMING_ENABLED = False
+V22_CONTROLLED_PREFLOP_REAL_CLICK_EXPLICIT_TOKEN = False
+V22_CONTROLLED_PREFLOP_REAL_CLICK_ALLOW_REAL_CLICK = False
+
+# Empty list means no table is allowed for real-click arming by config.
+V22_CONTROLLED_PREFLOP_REAL_CLICK_ALLOWED_TABLE_IDS = []
+
+# V2.2.x scope: preflop only. Postflop must remain blocked.
+V22_CONTROLLED_PREFLOP_REAL_CLICK_PREFLOP_ONLY = True
+
+# Mandatory guard switches for future controlled arming.
+V22_CONTROLLED_PREFLOP_REAL_CLICK_REQUIRE_SLOT_GUARD = True
+V22_CONTROLLED_PREFLOP_REAL_CLICK_REQUIRE_NO_REPEAT_GUARD = True
+V22_CONTROLLED_PREFLOP_REAL_CLICK_REQUIRE_BUTTON_AVAILABILITY = True
+V22_CONTROLLED_PREFLOP_REAL_CLICK_REQUIRE_EXPORT_VALIDATOR = True
