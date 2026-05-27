@@ -118,6 +118,60 @@ def _build_preflop_raise_98_runtime_plan(candidate: Dict[str, Any]) -> Dict[str,
         "decision_context": decision_context,
     }
 
+def _candidate_is_generic_preflop_raise_button(candidate: Dict[str, Any]) -> bool:
+    action = str(candidate.get("action") or "").strip().lower()
+    if action not in {"raise", "bet"}:
+        return False
+
+    decision_context = candidate.get("decision_context")
+    if not isinstance(decision_context, dict):
+        return False
+
+    street = str(decision_context.get("street") or "").strip().lower()
+    if street != "preflop":
+        return False
+
+    target_button_classes = candidate.get("target_button_classes")
+    return target_button_classes in (["Bet/Raise"], ["Raise"])
+
+
+def _build_generic_preflop_raise_button_runtime_plan(candidate: Dict[str, Any]) -> Dict[str, Any]:
+    source_frame_id = str(candidate.get("source_clear_frame_id") or "")
+    decision_context = dict(candidate.get("decision_context") or {})
+    target_button_classes = candidate.get("target_button_classes")
+    button = "Bet/Raise"
+    if target_button_classes == ["Raise"]:
+        button = "Raise"
+
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "source": "Solver_Action_Decision_Candidate_JSON",
+        "source_solver_candidate_frame_id": source_frame_id,
+        "source_action_decision_frame_id": source_frame_id,
+        "status": "ok",
+        "planned_action": "bet_raise",
+        "size_policy": None,
+        "target_button_classes": [button],
+        "target_sequence": [button],
+        "target_sequences": [[button]],
+        "runtime_branch": "action_button",
+        "policy_stage": "v2_7_1_generic_preflop_raise_button_realclick",
+        "policy_version": "v2.7.1_generic_preflop_raise_button",
+        "raise_branch_enabled": True,
+        "dry_run_required": False,
+        "dry_run": False,
+        "real_click_enabled": True,
+        "solver_stub": False,
+        "diagnostic_candidate": True,
+        "does_not_replace_runtime_plan": True,
+        "does_not_enable_real_click": True,
+        "solver_candidate_decision_id": candidate.get("decision_id"),
+        "solver_candidate_fingerprint": candidate.get("solver_fingerprint"),
+        "candidate_reason": "generic_preflop_raise_button_runtime_plan_built_from_solver_action_candidate",
+        "candidate_size_policy": dict(candidate.get("size_policy") or {}),
+        "decision_context": decision_context,
+    }
+
 
 def build_solver_action_runtime_plan_candidate(candidate: Dict[str, Any]) -> Dict[str, Any]:
     """Build diagnostic runtime plan candidate from Solver_Action_Decision_Candidate_JSON.
@@ -128,6 +182,9 @@ def build_solver_action_runtime_plan_candidate(candidate: Dict[str, Any]) -> Dic
     because the downstream button sequence cannot be proven before a future
     real-click enablement stage.
     """
+    if _candidate_is_generic_preflop_raise_button(candidate):
+        return _build_generic_preflop_raise_button_runtime_plan(candidate)
+
     if _raise_candidate_is_missing_size_policy(candidate):
         raise ValueError(UNSUPPORTED_RAISE_WITHOUT_SIZE_POLICY_REASON)
 
