@@ -37,6 +37,7 @@ CHECKS = [
     ("v238_config_driven_arming_activation_audit", ["audit_v238_config_driven_arming_activation.py"]),
     ("v240_controlled_armed_source_switch_unit", ["test_v240_controlled_armed_source_switch_unit.py"]),
     ("v242_controlled_source_switch_runtime_output_audit", ["audit_v242_controlled_source_switch_runtime_output.py"]),
+    ("v244_source_switch_default_safe_audit", ["audit_v244_source_switch_default_safe.py"]),
     ("v216_preflop_real_click_readiness_regression_bundle", ["run_v216_preflop_real_click_readiness_regression.py"]),
 ]
 
