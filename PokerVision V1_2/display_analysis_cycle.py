@@ -3652,3 +3652,145 @@ def run_ui_display_analysis_cycle(
 
 
     return saved_json_paths
+# =============================================================================
+# V2.5.2 CLI live dry-run entrypoint
+# =============================================================================
+
+def _build_v252_live_dryrun_cli_parser():
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="PokerVision V2.5.2 live dry-run CLI wrapper."
+    )
+    parser.add_argument("--live", action="store_true", help="Run live display-pass loop.")
+    parser.add_argument("--duration-sec", type=int, default=900, help="Live dry-run duration in seconds.")
+    parser.add_argument("--preflop-only", action="store_true", help="Keep live dry-run scope preflop-only.")
+    parser.add_argument("--dry-run", action="store_true", help="Force dry-run mode.")
+    parser.add_argument("--no-real-click", action="store_true", help="Force all real-click flags off.")
+    parser.add_argument("--solver-candidate-runtime-source", action="store_true", help="Enable solver candidate runtime source switch.")
+    parser.add_argument("--controlled-arming-diagnostics", action="store_true", help="Enable controlled V22 arming diagnostics only.")
+    parser.add_argument("--pass-interval-sec", type=float, default=1.0, help="Delay between live display passes.")
+    parser.add_argument("--max-passes", type=int, default=0, help="Optional max pass count; 0 means duration-based.")
+    return parser
+
+
+def _apply_v252_live_dryrun_cli_flags(args) -> None:
+    global V16_USE_SOLVER_CANDIDATE_AS_RUNTIME_SOURCE
+    global V16_SOLVER_CANDIDATE_RUNTIME_DRY_RUN_ONLY
+    global V16_SOLVER_CANDIDATE_RUNTIME_ALLOW_REAL_CLICK
+    global V11_CLICK_DRY_RUN
+    global V11_REAL_MOUSE_CLICK_ENABLED
+    global V11_TRIGGER_UI_SERVICE_REAL_CLICK_ENABLED
+    global V22_CONTROLLED_PREFLOP_REAL_CLICK_ARMING_ENABLED
+    global V22_CONTROLLED_PREFLOP_REAL_CLICK_EXPLICIT_TOKEN
+    global V22_CONTROLLED_PREFLOP_REAL_CLICK_ALLOW_REAL_CLICK
+    global V22_CONTROLLED_PREFLOP_REAL_CLICK_ALLOWED_TABLE_IDS
+
+    if args.solver_candidate_runtime_source:
+        V16_USE_SOLVER_CANDIDATE_AS_RUNTIME_SOURCE = True
+
+    V16_SOLVER_CANDIDATE_RUNTIME_DRY_RUN_ONLY = True
+    V16_SOLVER_CANDIDATE_RUNTIME_ALLOW_REAL_CLICK = False
+
+    if args.dry_run or args.no_real_click:
+        V11_CLICK_DRY_RUN = True
+
+    V11_REAL_MOUSE_CLICK_ENABLED = False
+    V11_TRIGGER_UI_SERVICE_REAL_CLICK_ENABLED = False
+
+    if args.controlled_arming_diagnostics:
+        V22_CONTROLLED_PREFLOP_REAL_CLICK_ARMING_ENABLED = True
+        V22_CONTROLLED_PREFLOP_REAL_CLICK_EXPLICIT_TOKEN = True
+        V22_CONTROLLED_PREFLOP_REAL_CLICK_ALLOW_REAL_CLICK = False
+        V22_CONTROLLED_PREFLOP_REAL_CLICK_ALLOWED_TABLE_IDS = [
+            slot.table_id for slot in list_table_slots()
+        ]
+
+
+def _run_v252_live_dryrun_cli(args) -> int:
+    import time
+
+    if not args.live:
+        print("[RESULT] OK V2.5.2 CLI parsed; --live was not requested.")
+        return 0
+
+    if args.duration_sec <= 0:
+        raise ValueError("--duration-sec must be positive")
+
+    _apply_v252_live_dryrun_cli_flags(args)
+
+    slots = list_table_slots()
+    image_by_table_id = {
+        slot.table_id: Path(f"v252_live_dummy_{slot.table_id}.png")
+        for slot in slots
+    }
+    opened_table_ids = set(image_by_table_id.keys())
+
+    hand_tracker = HandIdentityTracker()
+    action_event_gate = ActionEventGate()
+
+    started = now_perf_counter()
+    deadline = started + float(args.duration_sec)
+    pass_index = 0
+    total_saved = 0
+    total_errors = 0
+
+    print("V2.5.2 LIVE DRY-RUN CLI")
+    print("=" * 100)
+    print(f"duration_sec={args.duration_sec}")
+    print(f"preflop_only={bool(args.preflop_only)}")
+    print(f"dry_run={bool(V11_CLICK_DRY_RUN)}")
+    print(f"real_mouse_click_enabled={bool(V11_REAL_MOUSE_CLICK_ENABLED)}")
+    print(f"trigger_ui_service_real_click_enabled={bool(V11_TRIGGER_UI_SERVICE_REAL_CLICK_ENABLED)}")
+    print(f"solver_candidate_runtime_source={bool(V16_USE_SOLVER_CANDIDATE_AS_RUNTIME_SOURCE)}")
+    print(f"controlled_arming_diagnostics={bool(args.controlled_arming_diagnostics)}")
+    print(f"tables={sorted(opened_table_ids)}")
+    print()
+
+    while now_perf_counter() < deadline:
+        if args.max_passes and pass_index >= int(args.max_passes):
+            break
+
+        pass_index += 1
+        try:
+            saved_paths = run_ui_display_analysis_cycle(
+                image_by_table_id=image_by_table_id,
+                opened_table_ids=opened_table_ids,
+                hand_tracker=hand_tracker,
+                action_event_gate=action_event_gate,
+                display_pass_id=f"v252_live_dryrun_pass_{pass_index:04d}",
+                clear_previous_outputs_on_start=(pass_index == 1),
+                cycle_id=f"v252_live_dryrun_{pass_index:04d}",
+            )
+            saved_count = len(saved_paths)
+            total_saved += saved_count
+            print(f"[PASS {pass_index}] ok saved_json={saved_count}")
+        except KeyboardInterrupt:
+            print("[STOP] KeyboardInterrupt")
+            break
+        except Exception as exc:
+            total_errors += 1
+            print(f"[PASS {pass_index}] error {type(exc).__name__}: {exc}")
+
+        if args.pass_interval_sec > 0:
+            time.sleep(float(args.pass_interval_sec))
+
+    print()
+    print("SUMMARY:")
+    print(f"  passes: {pass_index}")
+    print(f"  saved_json_total: {total_saved}")
+    print(f"  errors_total: {total_errors}")
+    print(f"  real_mouse_click_enabled: {bool(V11_REAL_MOUSE_CLICK_ENABLED)}")
+    print(f"  trigger_ui_service_real_click_enabled: {bool(V11_TRIGGER_UI_SERVICE_REAL_CLICK_ENABLED)}")
+    print("[RESULT] OK V2.5.2 live dry-run CLI completed" if total_errors == 0 else "[RESULT] WARNING V2.5.2 live dry-run CLI completed with errors")
+    return 0 if total_errors == 0 else 1
+
+
+def main() -> int:
+    parser = _build_v252_live_dryrun_cli_parser()
+    args = parser.parse_args()
+    return _run_v252_live_dryrun_cli(args)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
