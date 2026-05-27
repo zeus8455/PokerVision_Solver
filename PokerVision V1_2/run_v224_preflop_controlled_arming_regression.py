@@ -32,6 +32,7 @@ CHECKS = [
     ("v225_preflop_arming_runtime_output_audit", ["audit_v225_preflop_arming_runtime_output.py"]),
     ("v230_preflop_only_postflop_hard_block_unit", ["test_v230_preflop_only_postflop_hard_block_unit.py"]),
     ("v232_runtime_postflop_never_arms_audit", ["audit_v232_runtime_postflop_never_arms.py"]),
+    ("v234_preflop_controlled_arming_dryrun_contract_unit", ["test_v234_preflop_controlled_arming_dryrun_contract_unit.py"]),
     ("v216_preflop_real_click_readiness_regression_bundle", ["run_v216_preflop_real_click_readiness_regression.py"]),
 ]
 
